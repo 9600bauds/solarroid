@@ -6,6 +6,62 @@ const isValidSpaceEntity = (entity) => {
   //Contains "wall" anywhere
   return entity.name.search("wall") >= 0
 }
+
+class Branch {
+  constructor(grid, buildingsPlaced) {
+    this.grid = grid.map(row => [...row]); // Deep copy
+    this.buildingsPlaced = buildingsPlaced.slice(); // Shallow copy
+  }
+
+  canPlaceSquare(x, y, square) {
+    const size = square.size;
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        if (x + i >= this.grid.length || y + j >= this.grid[0].length || !this.grid[x + i][y + j]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  placeSquare(x, y, square) {
+    const size = square.size;
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        this.grid[x + i][y + j] = false; // Mark the grid as filled
+      }
+    }
+    this.buildingsPlaced.push({ x, y, square });
+  }
+
+  getScore() {
+    return this.buildingsPlaced.reduce((sum, placement) => sum + placement.square.score, 0);
+  }
+  findNextOpenSpace() {
+    for (let x = 0; x < this.grid.length; x++) {
+      for (let y = 0; y < this.grid[0].length; y++) {
+        if (this.grid[x][y]) {
+          return { x, y };
+        }
+      }
+    }
+    return null;
+  }
+
+  clone() {
+    return new Branch(this.grid, this.buildingsPlaced);
+  }
+}
+
+class Square {
+  constructor(size, score, name) {
+    this.size = size;
+    this.score = score;
+    this.name = name
+  }
+}
+
 const printGrid = (grid) => {
   let out = ""
   const lastYIndex = grid[0].length - 1;
@@ -22,6 +78,37 @@ const printGrid = (grid) => {
     out += "\n"
   }
   console.log(out)
+}
+
+function findOptimalPlacement(grid, buildings) {
+  let maxScore = 0;
+  let bestBranch = new Branch(grid, []);
+  let branches = [bestBranch];
+
+  while (branches.length > 0) {
+    let branch = branches.pop();
+
+    const nextSpace = branch.findNextOpenSpace();
+    if (!nextSpace) {
+      if (branch.getScore() > maxScore) {
+        maxScore = branch.getScore();
+        bestBranch = branch;
+      }
+      continue;
+    }
+
+    const { x, y } = nextSpace;
+    for (const square of buildings) {
+      if (branch.canPlaceSquare(x, y, square)) {
+        let newBranch = branch.clone();
+        newBranch.placeSquare(x, y, square);
+
+        branches.push(newBranch);
+      }
+    }
+  }
+
+  return bestBranch
 }
 
 //const importString = '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'
@@ -48,7 +135,7 @@ for (const pos in importedBp.entityPositionGrid) {
 }
 const gridHeight = Math.abs(maxY - minY) + 1
 const gridWidth = Math.abs(maxX - minX) + 1
-let grid = Array(gridWidth).fill().map(() => Array(gridHeight).fill(false));
+let starterGrid = Array(gridWidth).fill().map(() => Array(gridHeight).fill(false));
 //Second pass: Populate the grid
 for (const pos in importedBp.entityPositionGrid) {
   const entity = importedBp.entityPositionGrid[pos]
@@ -64,14 +151,30 @@ for (const pos in importedBp.entityPositionGrid) {
   const adjustedY = maxY - thisY;
 
   // Populate the grid
-  grid[adjustedX][adjustedY] = true;
-  printGrid(grid)
+  starterGrid[adjustedX][adjustedY] = true;
 }
 
+printGrid(starterGrid)
+
+const buildings = [
+  new Square(4, 1000, "roboport"),
+  new Square(3, 250, "solar-panel"),
+  new Square(2, 30, "substation"),
+  new Square(1, 1, "medium-electric-pole")
+];
+
+let bestBranch = findOptimalPlacement(starterGrid, buildings);
+let newBp = new Blueprint();
+for (const buildingPlaced of bestBranch.buildingsPlaced) {
+  let building = buildingPlaced.square
+  let newX = buildingPlaced.x
+  let newY = buildingPlaced.y
+  newBp.createEntity(building.name, { x: newX, y: newY });
+}
+console.log(newBp.encode());
 debugger
-//importedBp.createEntity('transport-belt', { x: 0, y: 0 }, Blueprint.UP);
+
 
 // Export the string to use in-game
-//console.log(importedBp.encode());
 
 window.Blueprint = Blueprint; // This makes it accessible globally if needed
