@@ -1,0 +1,13 @@
+{
+  "dependencies": {
+    "factorio-blueprint": "^2.6.5"
+  },
+  "devDependencies": {
+    "browserify": "^17.0.0",
+    "watchify": "^4.0.0"
+  },
+  "scripts": {
+    "watch": "watchify main.js -o public/bundle.js --debug --verbose",
+    "build": "browserify main.js -o public/bundle.js"
+  }
+}
