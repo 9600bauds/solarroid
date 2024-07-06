@@ -24,18 +24,6 @@ const allBuildingPrototypes = [
 //Sort by their score per tile (higher is first)
 allBuildingPrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
 
-const canPlaceBuilding = (grid, x, y, prototype) => {
-  const size = prototype.size;
-  for (let i = 0; i < size; i++) {
-    for (let j = 0; j < size; j++) {
-      if (x + i >= grid.length || y + j >= grid[0].length || !grid[x + i][y + j]) {
-        return false;
-      }
-    }
-  }
-  return true;
-}
-
 class Grid {
   constructor(arg) {
     if (arg instanceof Grid) {
@@ -88,6 +76,18 @@ class Grid {
     }
   }
 
+  canPlaceBuilding(x, y, prototype) {
+    const size = prototype.size;
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        if (x + i >= this.twodee.length || y + j >= this.twodee[0].length || !this.twodee[x + i][y + j]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
   calculateOptimisticScorePerTile() {
     this.optimisticScorePerTile = Array(this.width).fill().map(() => Array(this.height).fill(0));
     for (let x = 0; x < this.width; x++) {
@@ -95,7 +95,7 @@ class Grid {
         if (this.twodee[x][y]) {
           //Check every open tile
           for (const prototype of allBuildingPrototypes) {
-            if (canPlaceBuilding(this.twodee, x, y, prototype)) {
+            if (this.canPlaceBuilding(x, y, prototype)) {
               //Mark every tile that that building could theoretically optimistically occupy with its score per tile
               for (let i = 0; i < prototype.size; i++) {
                 for (let j = 0; j < prototype.size; j++) {
@@ -245,7 +245,7 @@ for (let prototype of allBuildingPrototypes) {
   for (let x = 0; x < starterGrid.width; x++) {
     for (let y = 0; y < starterGrid.height; y++) {
       if (starterGrid.twodee[x][y]) {
-        if (canPlaceBuilding(greedyBranch.grid.twodee, x, y, prototype)) {
+        if (greedyBranch.grid.canPlaceBuilding(x, y, prototype)) {
           greedyBranch.placeBuilding(x, y, prototype);
         }
       }
@@ -285,7 +285,7 @@ while (!branches.isEmpty()) {
 
   const { x, y } = nextSpace;
   for (const prototype of allBuildingPrototypes) {
-    if (canPlaceBuilding(branch.grid.twodee, x, y, prototype)) {
+    if (branch.grid.canPlaceBuilding(x, y, prototype)) {
       let newBranch = branch.clone();
       newBranch.placeBuilding(x, y, prototype);
 
