@@ -102,7 +102,7 @@ class Grid {
   }
 
   isInBounds(x, y) {
-    return (x > 0 && y > 0 && x < this.width && y < this.height)
+    return (x >= 0 && y >= 0 && x < this.width && y < this.height)
   }
 
   canPlaceBuilding(x, y, prototype) {
@@ -348,6 +348,6 @@ console.log("Branches Skipped:", skippedCount);
 console.log("Skipped by heuristics:", heuristicsSkipCount);
 console.log("Branches in Queue:", branches.size());
 
-debugger
+//debugger
 
 window.Blueprint = Blueprint; // This makes it accessible globally if needed. Not sure if needed
