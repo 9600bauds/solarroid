@@ -76,6 +76,35 @@ class Grid {
     }
   }
 
+  forEachCoord(callback) {
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        callback(x, y, this.twodee[x][y]);
+      }
+    }
+  }
+
+  forEachOpenTile(callback) {
+    for (let x = 0; x < this.width; x++) {
+      for (let y = 0; y < this.height; y++) {
+        if (this.twodee[x][y]) {
+          callback(x, y);
+        }
+      }
+    }
+  }
+
+  findNextOpenSpace() {
+    this.forEachOpenTile((x, y) => {
+      return { x, y };
+    });
+    return null;
+  }
+
+  isInBounds(x, y) {
+    return (x > 0 && y > 0 && x < this.width && y < this.height)
+  }
+
   canPlaceBuilding(x, y, prototype) {
     const size = prototype.size;
     for (let i = 0; i < size; i++) {
@@ -90,27 +119,21 @@ class Grid {
 
   calculateOptimisticScorePerTile() {
     this.optimisticScorePerTile = Array(this.width).fill().map(() => Array(this.height).fill(0));
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        if (this.twodee[x][y]) {
-          //Check every open tile
-          for (const prototype of allBuildingPrototypes) {
-            if (this.canPlaceBuilding(x, y, prototype)) {
-              //Mark every tile that that building could theoretically optimistically occupy with its score per tile
-              for (let i = 0; i < prototype.size; i++) {
-                for (let j = 0; j < prototype.size; j++) {
-                  const oldVal = this.optimisticScorePerTile[x + i][y + j];
-                  const newVal = prototype.scorePerTile;
-                  this.optimisticScorePerTile[x + i][y + j] = Math.max(oldVal, newVal)
-                }
-              }
+    this.forEachOpenTile((x, y) => {
+      for (const prototype of allBuildingPrototypes) {
+        if (this.canPlaceBuilding(x, y, prototype)) {
+          //Mark every tile that that building could theoretically optimistically occupy with its score per tile
+          for (let i = 0; i < prototype.size; i++) {
+            for (let j = 0; j < prototype.size; j++) {
+              const oldVal = this.optimisticScorePerTile[x + i][y + j];
+              const newVal = prototype.scorePerTile;
+              this.optimisticScorePerTile[x + i][y + j] = Math.max(oldVal, newVal)
             }
           }
         }
       }
-    }
+    });
   }
-
 }
 
 class Branch {
@@ -132,23 +155,8 @@ class Branch {
     this.buildingsPlaced.push(newPlacedBuilding);
   }
 
-  findNextOpenSpace() {
-    for (let x = 0; x < this.grid.width; x++) {
-      for (let y = 0; y < this.grid.height; y++) {
-        if (this.grid.twodee[x][y]) {
-          return { x, y };
-        }
-      }
-    }
-    return null;
-  }
-
-  isInBounds(x, y) {
-    return (x > 0 && y > 0 && x < this.grid.width && y < this.grid.height)
-  }
-
   getIntersectingBuilding(x, y) {
-    if (!this.isInBounds(x, y)) {
+    if (!this.grid.isInBounds(x, y)) {
       return null
     }
     for (const building of this.buildingsPlaced) {
@@ -198,13 +206,9 @@ class Branch {
     if (!this.grid.optimisticScorePerTile) {
       this.grid.calculateOptimisticScorePerTile()
     }
-    for (let x = 0; x < this.grid.width; x++) {
-      for (let y = 0; y < this.grid.height; y++) {
-        if (this.grid.twodee[x][y]) {
-          sum += this.grid.optimisticScorePerTile[x][y];
-        }
-      }
-    }
+    this.grid.forEachOpenTile((x, y) => {
+      sum += this.grid.optimisticScorePerTile[x][y];
+    });
     return sum;
   }
 
@@ -242,15 +246,11 @@ starterGrid.calculateOptimisticScorePerTile();
 //Create a greedy branch as a reference point
 let greedyBranch = new Branch(starterGrid, []);
 for (let prototype of allBuildingPrototypes) {
-  for (let x = 0; x < starterGrid.width; x++) {
-    for (let y = 0; y < starterGrid.height; y++) {
-      if (starterGrid.twodee[x][y]) {
-        if (greedyBranch.grid.canPlaceBuilding(x, y, prototype)) {
-          greedyBranch.placeBuilding(x, y, prototype);
-        }
-      }
+  greedyBranch.grid.forEachOpenTile((x, y) => {
+    if (greedyBranch.grid.canPlaceBuilding(x, y, prototype)) {
+      greedyBranch.placeBuilding(x, y, prototype);
     }
-  }
+  });
 }
 console.log("Greedy branch:");
 console.log(greedyBranch.toString());
@@ -274,7 +274,7 @@ while (!branches.isEmpty()) {
   let branch = branches.deq();
   evaluatedCount++;
 
-  const nextSpace = branch.findNextOpenSpace();
+  const nextSpace = branch.grid.findNextOpenSpace();
   if (!nextSpace) {
     if (branch.score > maxScore) {
       maxScore = branch.score;
