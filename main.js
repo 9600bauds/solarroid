@@ -88,17 +88,21 @@ class Grid {
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
         if (this.twodee[x][y]) {
-          callback(x, y);
+          if (callback(x, y) === false) { // Stop iterating if callback returns false
+            return;
+          }
         }
       }
     }
   }
 
   findNextOpenSpace() {
+    let result = null;
     this.forEachOpenTile((x, y) => {
-      return { x, y };
+      result = { x, y };
+      return false; // Stop iterating immediately
     });
-    return null;
+    return result;
   }
 
   isInBounds(x, y) {
@@ -109,7 +113,7 @@ class Grid {
     const size = prototype.size;
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
-        if (x + i >= this.twodee.length || y + j >= this.twodee[0].length || !this.twodee[x + i][y + j]) {
+        if (x + i >= this.width || y + j >= this.height || !this.twodee[x + i][y + j]) {
           return false;
         }
       }
@@ -212,6 +216,16 @@ class Branch {
     return sum;
   }
 
+  greedyAutoComplete() {
+    for (let prototype of allBuildingPrototypes) {
+      this.grid.forEachOpenTile((x, y) => {
+        if (this.grid.canPlaceBuilding(x, y, prototype)) {
+          this.placeBuilding(x, y, prototype);
+        }
+      });
+    }
+  }
+
   getPriority(weight = 0.5) {
     return this.score + this.optimisticRemainingScore * weight;
   }
@@ -245,13 +259,8 @@ let starterGrid = new Grid(importedBp);
 starterGrid.calculateOptimisticScorePerTile();
 //Create a greedy branch as a reference point
 let greedyBranch = new Branch(starterGrid, []);
-for (let prototype of allBuildingPrototypes) {
-  greedyBranch.grid.forEachOpenTile((x, y) => {
-    if (greedyBranch.grid.canPlaceBuilding(x, y, prototype)) {
-      greedyBranch.placeBuilding(x, y, prototype);
-    }
-  });
-}
+greedyBranch.greedyAutoComplete()
+
 console.log("Greedy branch:");
 console.log(greedyBranch.toString());
 console.log(greedyBranch.toBlueprint().encode());
@@ -268,7 +277,6 @@ let evaluatedCount = 0;
 let skippedCount = 0;
 let heuristicsSkipCount = 0;
 let lastPrintTime = 0;
-
 
 while (!branches.isEmpty()) {
   let branch = branches.deq();
