@@ -125,6 +125,10 @@ class Grid {
     }
   }
 
+  getKey() {
+    return this.twodee.map(row => row.map(cell => cell ? '1' : '0').join('')).join('');
+  }
+
   forEachCoord(callback) {
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
@@ -328,9 +332,9 @@ console.assert(testSquare.intersectsRectangle(2, 2, 5, 5))
 console.assert(testSquare.isBisectedByRectangle(3, 3, 6, 6))
 
 //const importString = '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'
-//const importString = '0eNqdm9tOU1EURf9lP1ey75f+iiEG9MQ0KaeEFpWQ/rsFXhpl5Kwz38TY4Rx6uvdkrfLq7vfP0+PTbj657avbfT/MR7f9+uqOu5/z3f7t904vj5Pbut1penAbN989vH11PB3m6cvvu/3enTduN/+Y/rhtON9u3DSfdqfd9EF5/+Ll2/z8cD89Xf7AZ6/fuMfD8fKSw/z2t10wX1qIN2XjXi6/DL3flPN58x8qWlFhEZWsKL+IykaUH4uoYkX1RVS1otoiqln/ra5Q9XNUt6LqImpYUWURFbyVlZdZQcjVgBWFXMQyP/Fp2TEL72liFSEXOVYhF7GacNiQYxdOG2INIRc4Ri/kIlYQjkFwjFE4B4mVhFzkmIVcxCrCAU2O5sN++ViNTchFjl3IRSzrc++Xz+hkfe798t2RgsACx2Q+76+erwysJLAKsLJwbVOuIrQJYlWBRY5NcCRWF+5tclR6DrCyF1jgmIPgSKwo3NvkqPQcYmWBRY5FcCRWFe5tclR6DrG6wCLHITgCq3jh3gbHovQcYkWBRY5JcCRWFu5tclR6DrGUb2rJsQmOxOpCNyHHIfQJYFWl54BjDYIjsczP/fJ5X83P/fJ5X7PAIkfzeX/13o7AqkKXI1YTciVgdSEXsYbQ5cCxeaHLESsIucCxRSEXsZLQ5cgxC12OWEXIRY5VyEWsJnQ5cuxClyPWEHKBY/dCLmIFocuBY49ClyNWEnKRYxZyEasIXY4cq9DliNWEXOTYhVzEGkKXA8fhhS5HrCDkAscRhVzESkKXI8csdDliFSEXOVYhF7Ga0OXIsQt9lVhDyJVob+WFYAgzP/nLJ37wUaiZgWDKLNMTLAswTFaERofJlHEmwpStLWoqe1uEDaHVkWZQRpoIU2aapGlf3hYDLAnNDjWVsSbClLkmalYhGcKa0O5QUxltIkyZbZKmfYkbDLAgNDzSjMp4E2HKfBM1lc/sIKwILQ81lREnwpQZJ2p2IRnClG0uaUrrXIQpc07SNC90veEOMG90veEOSMqoE2FFSIaaVUiGsCZ0WtTsAgyTjfWVqnX6PJZfX/YYFoRkg2BRSIawtL6fsWZe388YVoRkqFmFZAhr6/sZa/b1/YxhQ0hGmuYV73UyhIX1/Qw1i/CpZYYJn1tmzSwkQ5jw2WXWrOv7GcOakAw1u5AMYWN9P0NN+7LXcAfYt72GO8C+7jXcAfZ9r+EOsC98DXeAeePrDXeAeeXrDXdAFWahDBOGoQwTpqH4H9CEaSjDzO8Aw0lrXvx6w0lr3vx6w4ViXv36f6+6283Hjwdtr36aaON+TU/H95fFfqkeI7be46WF1/P5L25sU9A='
+const importString = '0eNqdm9tOU1EURf9lP1ey75f+iiEG9MQ0KaeEFpWQ/rsFXhpl5Kwz38TY4Rx6uvdkrfLq7vfP0+PTbj657avbfT/MR7f9+uqOu5/z3f7t904vj5Pbut1penAbN989vH11PB3m6cvvu/3enTduN/+Y/rhtON9u3DSfdqfd9EF5/+Ll2/z8cD89Xf7AZ6/fuMfD8fKSw/z2t10wX1qIN2XjXi6/DL3flPN58x8qWlFhEZWsKL+IykaUH4uoYkX1RVS1otoiqln/ra5Q9XNUt6LqImpYUWURFbyVlZdZQcjVgBWFXMQyP/Fp2TEL72liFSEXOVYhF7GacNiQYxdOG2INIRc4Ri/kIlYQjkFwjFE4B4mVhFzkmIVcxCrCAU2O5sN++ViNTchFjl3IRSzrc++Xz+hkfe798t2RgsACx2Q+76+erwysJLAKsLJwbVOuIrQJYlWBRY5NcCRWF+5tclR6DrCyF1jgmIPgSKwo3NvkqPQcYmWBRY5FcCRWFe5tclR6DrG6wCLHITgCq3jh3gbHovQcYkWBRY5JcCRWFu5tclR6DrGUb2rJsQmOxOpCNyHHIfQJYFWl54BjDYIjsczP/fJ5X83P/fJ5X7PAIkfzeX/13o7AqkKXI1YTciVgdSEXsYbQ5cCxeaHLESsIucCxRSEXsZLQ5cgxC12OWEXIRY5VyEWsJnQ5cuxClyPWEHKBY/dCLmIFocuBY49ClyNWEnKRYxZyEasIXY4cq9DliNWEXOTYhVzEGkKXA8fhhS5HrCDkAscRhVzESkKXI8csdDliFSEXOVYhF7Ga0OXIsQt9lVhDyJVob+WFYAgzP/nLJ37wUaiZgWDKLNMTLAswTFaERofJlHEmwpStLWoqe1uEDaHVkWZQRpoIU2aapGlf3hYDLAnNDjWVsSbClLkmalYhGcKa0O5QUxltIkyZbZKmfYkbDLAgNDzSjMp4E2HKfBM1lc/sIKwILQ81lREnwpQZJ2p2IRnClG0uaUrrXIQpc07SNC90veEOMG90veEOSMqoE2FFSIaaVUiGsCZ0WtTsAgyTjfWVqnX6PJZfX/YYFoRkg2BRSIawtL6fsWZe388YVoRkqFmFZAhr6/sZa/b1/YxhQ0hGmuYV73UyhIX1/Qw1i/CpZYYJn1tmzSwkQ5jw2WXWrOv7GcOakAw1u5AMYWN9P0NN+7LXcAfYt72GO8C+7jXcAfZ9r+EOsC98DXeAeePrDXeAeeXrDXdAFWahDBOGoQwTpqH4H9CEaSjDzO8Aw0lrXvx6w0lr3vx6w4ViXv36f6+6283Hjwdtr36aaON+TU/H95fFfqkeI7be46WF1/P5L25sU9A='
 //const importString = '0eNqdmN1ugkAUhN9lr2mze9g/eJWmabTdNCS6GqE/xvDuRb1p0k52mTsw8jlDhjMeLmq7+0jH05An1V/U8HrIo+qfLmoc3vNmd/1sOh+T6tUwpb1qVN7sr2fjdMjp4Wuz26m5UUN+S9+qN/Nzo1KehmlId8rt5PySP/bbdFq+8N/1jToexuWSQ77+2oJ5CMY+ukadl0MTlsN5bv6ghEC5/1FtLUqKqmwtqi2iHKEKGPSEKoAKtShdNBhrUaaI6ghVwKDRhCzEqs27jkWLRggW0lWbeN2VdVmChXTVZl6HMssTLOSxNvXal3VFgoV01eZel4eg1OZeuzLLECw054XwiFjVuS/PVKnOfXmoiiNYyKMnPCJWde7Lc1Wqc1+eq9IRLOCx1UTPCmAZomgRSwhdLWC1hC7EskTXIo+O6FrE8oQu5DEQuhArEr2NPHZE1wKW1YQu4NEaQhdiCdHbiNUSXYtYltCF7r0jdCGWJ/oReQxEbyNWJFjII/M/B7CcJvoReHSG6G3EEkIX8tgSuhDLEl2LPDI7rQYsT7AMYAWiHxErEj2EPHZEDwGW14Qu4NEbQhdiMXst8sjstYhlCV3IoyN0IRaz1yIWs9ciFrPXonvfER4BK2iiO4DHwOy1iCUEC3lk5j3SZdfPVd8Blls/cyDLr585kBXWP9uQFdc/25BF5P7Oem7u7+f7X6/zG/WZTuPtMonGhk5CjGLa4Of5B/DaeoA='
-const importString = '0eNqd199KwzAYBfB3+a6jNP+atK8iIpsGKXTpWDt1jL67Xb1QcIeGc9eO5bfzQc5IrrLvz+l46vIk7VW61yGP0j5dZeze866/fTZdjkla6aZ0ECV5d7i9jdOQ08Pnru9lVtLlt/QlrZ6flaQ8dVOXfpT15fKSz4d9Oi1fuLdeyXEYlyVDvv3awjwEXT96JZflUdfL4zyrf5QppdwmZUspv0m5UspsUr6UsptUTaQK96lApAJULKXiL+XuUw2xrwClq1IrbFvMfvfAMkQuZFmiPGhGR7QHWZ7IhWasiVzIYnY9mjESZUS5GiIXsExF1NEASxOWBVbxvm+2LUtYaEZHdBvl8kS3kVUTudCMgciFrEh0G83YEBbIZSvifwLkspqwUC5DdBvlsoSFcjmi2xpYnugjsmoiVwWsQHQI5YpEh5DFnHPAjI455yBLE30EMzpDdAjlYk72a67lHrPed9o/1yMlH+k0rstM1C40JsRotA31PH8Dey8mJQ=='
+//const importString = '0eNqd199KwzAYBfB3+a6jNP+atK8iIpsGKXTpWDt1jL67Xb1QcIeGc9eO5bfzQc5IrrLvz+l46vIk7VW61yGP0j5dZeze866/fTZdjkla6aZ0ECV5d7i9jdOQ08Pnru9lVtLlt/QlrZ6flaQ8dVOXfpT15fKSz4d9Oi1fuLdeyXEYlyVDvv3awjwEXT96JZflUdfL4zyrf5QppdwmZUspv0m5UspsUr6UsptUTaQK96lApAJULKXiL+XuUw2xrwClq1IrbFvMfvfAMkQuZFmiPGhGR7QHWZ7IhWasiVzIYnY9mjESZUS5GiIXsExF1NEASxOWBVbxvm+2LUtYaEZHdBvl8kS3kVUTudCMgciFrEh0G83YEBbIZSvifwLkspqwUC5DdBvlsoSFcjmi2xpYnugjsmoiVwWsQHQI5YpEh5DFnHPAjI455yBLE30EMzpDdAjlYk72a67lHrPed9o/1yMlH+k0rstM1C40JsRotA31PH8Dey8mJQ=='
 //const importString = '0eNqd1cFuhCAQBuB3mTO7EQRBX2XTbNyWNCSKRti2xvDui/bSpE40cxPjfP4MBBZ4dE87Ts5HaBZw74MP0NwWCO7Tt936Ls6jhQZctD0w8G2/jkIcvL18t10HiYHzH/YHGp7eGFgfXXT2V9kG890/+4ed8gd79QzGIeSSwa9/y8xF8+KqGMz5kev6qlJi/yhBoMw+VZ6kivowlTxLmcNUipAKoSpCr/Q+pQlUtU8ZQq+QVDWhVwjFC0IsZIacE3Jh1tkNX+hjqySsokQsSbAUYilC77FcFcHCcmnCOmK5DMHCctWEPYFYoiBYyBwF5ZwvEUsQ1hGzKCc9ZklCvzYr35HbXdr8uXoZfNkpbGXCcKlroY0RvNRVSi+hDmSc'
 const importedBp = new Blueprint(importString);
 let starterGrid = new Grid(importedBp);
@@ -345,18 +349,23 @@ console.log(greedyBranch.toBlueprint().encode());
 console.log("Score:", greedyBranch.getScore());
 
 
+const startTime = Date.now();
 let heuristicMult = 0.5;
 let startingBranch = new Branch(starterGrid, []);
 let maxScore = greedyBranch.getScore();
 let bestBranch = greedyBranch;
+
 const branches = new PriorityQueue((a, b) => a.priority - b.priority)
 branches.enq(startingBranch, startingBranch.getPriority(heuristicMult))
+
+let evaluatedGrids = new Map();
+
 let evaluatedCount = 0;
 let skippedCount = 0;
 let heuristicsSkipCount = 0;
+let hashingSkipCount = 0;
 let lastPrintTime = 0;
 
-let branchesEvaluated = [];
 while (!branches.isEmpty()) {
   let branch = branches.deq();
   evaluatedCount++;
@@ -375,9 +384,18 @@ while (!branches.isEmpty()) {
     if (branch.grid.canPlaceBuilding(x, y, prototype)) {
       let newBranch = branch.clone();
       newBranch.placeBuilding(x, y, prototype);
-      newBranch.calculateOptimisticRemainingScore();
 
-      let shouldSkip = false;
+      const key = newBranch.grid.getKey()
+      const existingScore = evaluatedGrids.get(key);
+      if (existingScore !== undefined && existingScore >= newBranch.score) {
+        hashingSkipCount++;
+        continue;
+      }
+      else {
+        evaluatedGrids.set(key, newBranch.score)
+      }
+
+      /*let shouldSkip = false;
 
       branch.grid.forEachCoord((loopx, loopy, tile) => {
         for (const otherPrototype of allBuildingPrototypes) {
@@ -394,8 +412,9 @@ while (!branches.isEmpty()) {
       if (shouldSkip) {
         heuristicsSkipCount++;
         continue;
-      }
+      }*/
 
+      newBranch.calculateOptimisticRemainingScore();
       const heuristicMaxScore = newBranch.score + newBranch.optimisticRemainingScore * 1;
       if (heuristicMaxScore >= maxScore) {
         branches.enq(newBranch, newBranch.getPriority(heuristicMult))
@@ -425,6 +444,7 @@ while (!branches.isEmpty()) {
     console.log("Branches Evaluated:", evaluatedCount);
     console.log("Branches Skipped:", skippedCount);
     console.log("Skipped by heuristics:", heuristicsSkipCount);
+    console.log("Skipped by hashing:", hashingSkipCount);
     console.log("Branches in Queue:", branches.size());
     setTimeout(() => {
       // Continue the loop in the next event loop iteration
@@ -433,15 +453,16 @@ while (!branches.isEmpty()) {
   }
 }
 
-// Export the string to use in-game
-console.log("Found the optimal solution:");
+
+const endTime = Date.now();
+console.log(`Found the optimal solution in ${(endTime - startTime) / 1000} seconds:`);
 console.log(bestBranch.toString());
 console.log(bestBranch.toBlueprint().encode());
 console.log("Score:", bestBranch.score);
 console.log("Branches Evaluated:", evaluatedCount);
 console.log("Branches Skipped:", skippedCount);
 console.log("Skipped by heuristics:", heuristicsSkipCount);
-console.log("Branches in Queue:", branches.size());
+console.log("Skipped by hashing:", hashingSkipCount);
 
 //debugger
 
