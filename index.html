@@ -4,12 +4,44 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>solarroid</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="app">
-        <!-- Your app content will go here -->
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-4">
+                <div class="pane" id="pane-left">
+                  <div id="left-title">
+                    Best branch:
+                  </div>
+                  <canvas id="canvas-left" width="500" height="800"></canvas>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="pane" id="pane-right">
+                  <div id="right-title">
+                    Current branch being evaluated:
+                  </div>
+                  <canvas id="canvas-right" width="500" height="800"></canvas>
+                </div>
+            </div>
+            <div class="col-4">
+                <div class="pane" id="pane-stats">
+                  <form id="search-form" class="form-inline">
+                      <input type="text" class="form-control mr-2" id="search-input" placeholder="0eNqd199KwzAYBfB3+a6jNP+atK8iIpsGKXTpWDt1jL67Xb1QcIeGc9eO5bfzQc5IrrLvz+l46vIk7VW61yGP0j5dZeze866/fTZdjkla6aZ0ECV5d7i9jdOQ08Pnru9lVtLlt/QlrZ6flaQ8dVOXfpT15fKSz4d9Oi1fuLdeyXEYlyVDvv3awjwEXT96JZflUdfL4zyrf5QppdwmZUspv0m5UspsUr6UsptUTaQK96lApAJULKXiL+XuUw2xrwClq1IrbFvMfvfAMkQuZFmiPGhGR7QHWZ7IhWasiVzIYnY9mjESZUS5GiIXsExF1NEASxOWBVbxvm+2LUtYaEZHdBvl8kS3kVUTudCMgciFrEh0G83YEBbIZSvifwLkspqwUC5DdBvlsoSFcjmi2xpYnugjsmoiVwWsQHQI5YpEh5DFnHPAjI455yBLE30EMzpDdAjlYk72a67lHrPed9o/1yMlH+k0rstM1C40JsRotA31PH8Dey8mJQ==">
+                      <button type="submit" class="btn btn-primary">Submit</button>
+                  </form>
+                  <div id="stats">
+
+                  </div>
+                </div>
+            </div>
+        </div>
     </div>
     <script src="public/bundle.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 </body>
 </html>

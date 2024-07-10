@@ -1,5 +1,6 @@
 const Blueprint = require('factorio-blueprint');
 const PriorityQueue = require('priorityqueuejs');
+window.Blueprint = Blueprint; // This makes it accessible globally if needed. Not sure if needed
 
 const isValidSpaceEntity = (entity) => {
   //Contains "wall" anywhere
@@ -7,12 +8,14 @@ const isValidSpaceEntity = (entity) => {
 }
 
 class BuildingPrototype {
-  constructor(size, score, name) {
+  constructor(size, score, name, fillColor, borderColor) {
     this.size = size;
     this.score = score;
     this.name = name;
     this.scorePerTile = score / size / size;
     this.area = size * size;
+    this.fillColor = fillColor;
+    this.borderColor = borderColor;
   }
 
   toString() {
@@ -21,10 +24,10 @@ class BuildingPrototype {
 }
 
 const allBuildingPrototypes = [
-  new BuildingPrototype(4, 1000, "roboport"),
-  new BuildingPrototype(3, 250, "solar-panel"),
-  new BuildingPrototype(2, 30, "substation"),
-  new BuildingPrototype(1, 1, "medium-electric-pole")
+  new BuildingPrototype(4, 1000, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
+  new BuildingPrototype(3, 250, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
+  new BuildingPrototype(2, 30, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)'),
+  new BuildingPrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)')
 ];
 //Sort by their score per tile (higher is first)
 allBuildingPrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
@@ -325,145 +328,204 @@ class Branch {
   }
 }
 
+// crude testing
 const testSquare = new PlacedBuilding(1, 1, new BuildingPrototype(4, 4, "test-4x4"))
 console.assert(testSquare.isFullyContainedByRectangle(1, 1, 5, 5))
 console.assert(!testSquare.isFullyContainedByRectangle(1, 1, 4, 4))
 console.assert(testSquare.intersectsRectangle(2, 2, 5, 5))
 console.assert(testSquare.isBisectedByRectangle(3, 3, 6, 6))
 
-//const importString = '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'
-const importString = '0eNqdm9tOU1EURf9lP1ey75f+iiEG9MQ0KaeEFpWQ/rsFXhpl5Kwz38TY4Rx6uvdkrfLq7vfP0+PTbj657avbfT/MR7f9+uqOu5/z3f7t904vj5Pbut1penAbN989vH11PB3m6cvvu/3enTduN/+Y/rhtON9u3DSfdqfd9EF5/+Ll2/z8cD89Xf7AZ6/fuMfD8fKSw/z2t10wX1qIN2XjXi6/DL3flPN58x8qWlFhEZWsKL+IykaUH4uoYkX1RVS1otoiqln/ra5Q9XNUt6LqImpYUWURFbyVlZdZQcjVgBWFXMQyP/Fp2TEL72liFSEXOVYhF7GacNiQYxdOG2INIRc4Ri/kIlYQjkFwjFE4B4mVhFzkmIVcxCrCAU2O5sN++ViNTchFjl3IRSzrc++Xz+hkfe798t2RgsACx2Q+76+erwysJLAKsLJwbVOuIrQJYlWBRY5NcCRWF+5tclR6DrCyF1jgmIPgSKwo3NvkqPQcYmWBRY5FcCRWFe5tclR6DrG6wCLHITgCq3jh3gbHovQcYkWBRY5JcCRWFu5tclR6DrGUb2rJsQmOxOpCNyHHIfQJYFWl54BjDYIjsczP/fJ5X83P/fJ5X7PAIkfzeX/13o7AqkKXI1YTciVgdSEXsYbQ5cCxeaHLESsIucCxRSEXsZLQ5cgxC12OWEXIRY5VyEWsJnQ5cuxClyPWEHKBY/dCLmIFocuBY49ClyNWEnKRYxZyEasIXY4cq9DliNWEXOTYhVzEGkKXA8fhhS5HrCDkAscRhVzESkKXI8csdDliFSEXOVYhF7Ga0OXIsQt9lVhDyJVob+WFYAgzP/nLJ37wUaiZgWDKLNMTLAswTFaERofJlHEmwpStLWoqe1uEDaHVkWZQRpoIU2aapGlf3hYDLAnNDjWVsSbClLkmalYhGcKa0O5QUxltIkyZbZKmfYkbDLAgNDzSjMp4E2HKfBM1lc/sIKwILQ81lREnwpQZJ2p2IRnClG0uaUrrXIQpc07SNC90veEOMG90veEOSMqoE2FFSIaaVUiGsCZ0WtTsAgyTjfWVqnX6PJZfX/YYFoRkg2BRSIawtL6fsWZe388YVoRkqFmFZAhr6/sZa/b1/YxhQ0hGmuYV73UyhIX1/Qw1i/CpZYYJn1tmzSwkQ5jw2WXWrOv7GcOakAw1u5AMYWN9P0NN+7LXcAfYt72GO8C+7jXcAfZ9r+EOsC98DXeAeePrDXeAeeXrDXdAFWahDBOGoQwTpqH4H9CEaSjDzO8Aw0lrXvx6w0lr3vx6w4ViXv36f6+6283Hjwdtr36aaON+TU/H95fFfqkeI7be46WF1/P5L25sU9A='
-//const importString = '0eNqdmN1ugkAUhN9lr2mze9g/eJWmabTdNCS6GqE/xvDuRb1p0k52mTsw8jlDhjMeLmq7+0jH05An1V/U8HrIo+qfLmoc3vNmd/1sOh+T6tUwpb1qVN7sr2fjdMjp4Wuz26m5UUN+S9+qN/Nzo1KehmlId8rt5PySP/bbdFq+8N/1jToexuWSQ77+2oJ5CMY+ukadl0MTlsN5bv6ghEC5/1FtLUqKqmwtqi2iHKEKGPSEKoAKtShdNBhrUaaI6ghVwKDRhCzEqs27jkWLRggW0lWbeN2VdVmChXTVZl6HMssTLOSxNvXal3VFgoV01eZel4eg1OZeuzLLECw054XwiFjVuS/PVKnOfXmoiiNYyKMnPCJWde7Lc1Wqc1+eq9IRLOCx1UTPCmAZomgRSwhdLWC1hC7EskTXIo+O6FrE8oQu5DEQuhArEr2NPHZE1wKW1YQu4NEaQhdiCdHbiNUSXYtYltCF7r0jdCGWJ/oReQxEbyNWJFjII/M/B7CcJvoReHSG6G3EEkIX8tgSuhDLEl2LPDI7rQYsT7AMYAWiHxErEj2EPHZEDwGW14Qu4NEbQhdiMXst8sjstYhlCV3IoyN0IRaz1yIWs9ciFrPXonvfER4BK2iiO4DHwOy1iCUEC3lk5j3SZdfPVd8Blls/cyDLr585kBXWP9uQFdc/25BF5P7Oem7u7+f7X6/zG/WZTuPtMonGhk5CjGLa4Of5B/DaeoA='
-//const importString = '0eNqd199KwzAYBfB3+a6jNP+atK8iIpsGKXTpWDt1jL67Xb1QcIeGc9eO5bfzQc5IrrLvz+l46vIk7VW61yGP0j5dZeze866/fTZdjkla6aZ0ECV5d7i9jdOQ08Pnru9lVtLlt/QlrZ6flaQ8dVOXfpT15fKSz4d9Oi1fuLdeyXEYlyVDvv3awjwEXT96JZflUdfL4zyrf5QppdwmZUspv0m5UspsUr6UsptUTaQK96lApAJULKXiL+XuUw2xrwClq1IrbFvMfvfAMkQuZFmiPGhGR7QHWZ7IhWasiVzIYnY9mjESZUS5GiIXsExF1NEASxOWBVbxvm+2LUtYaEZHdBvl8kS3kVUTudCMgciFrEh0G83YEBbIZSvifwLkspqwUC5DdBvlsoSFcjmi2xpYnugjsmoiVwWsQHQI5YpEh5DFnHPAjI455yBLE30EMzpDdAjlYk72a67lHrPed9o/1yMlH+k0rstM1C40JsRotA31PH8Dey8mJQ=='
-//const importString = '0eNqd1cFuhCAQBuB3mTO7EQRBX2XTbNyWNCSKRti2xvDui/bSpE40cxPjfP4MBBZ4dE87Ts5HaBZw74MP0NwWCO7Tt936Ls6jhQZctD0w8G2/jkIcvL18t10HiYHzH/YHGp7eGFgfXXT2V9kG890/+4ed8gd79QzGIeSSwa9/y8xF8+KqGMz5kev6qlJi/yhBoMw+VZ6kivowlTxLmcNUipAKoSpCr/Q+pQlUtU8ZQq+QVDWhVwjFC0IsZIacE3Jh1tkNX+hjqySsokQsSbAUYilC77FcFcHCcmnCOmK5DMHCctWEPYFYoiBYyBwF5ZwvEUsQ1hGzKCc9ZklCvzYr35HbXdr8uXoZfNkpbGXCcKlroY0RvNRVSi+hDmSc'
-const importedBp = new Blueprint(importString);
-let starterGrid = new Grid(importedBp);
-starterGrid.calculateOptimisticScorePerTile();
-//Create a greedy branch as a reference point
-let greedyBranch = new Branch(starterGrid, []);
-greedyBranch.greedyAutoComplete()
+//0eNqd1+1qgzAYBeB7eX/bYmK+9FbGGO0WhmBjqXabFO996mAM1oP2/Iw0T88bPGBucmyu8XypUy/VTerXNnVSPd2kq9/ToZmf9cM5SiV1H0+SSTqc5lXXtynuPg9NI2MmdXqLX1Kp8TmTmPq6r+OPsiyGl3Q9HeNl+sG9/Zmc227a0qb53yZmp3Kb53ubyTAvwt6OY/bP0lstU5a/VnnfKrZbYc0yTC4wo2VyActtt9ya5bdbfu28ApMLWCWTC8yo8u2YXQumFIOhZA+8+mYVK5hOeoAZBnMAs0yTUDLHVAlhnkmGxgxMMoRRDQCYzhkMnJlWTM8RphkMjVkw3UTJDNNNhFkmGRrTMckQ9kADitUxA4OhZCXTTQu+C3KmmwZgisFQMs10E2EFUyeEGSYZOjPLJEOYY+qExvRMnRAWmGRozJJJBjCTM91cxpzuAsudofpzxcjkI166ZZ8OyvhS+xC0Krwbx29KW+cQ
+//0eNqVmtFO3DAQRf/FzymKnTix91cqVEEbVZGWLGKXtgjtv3cBgSqVo+S8sYgc7jXjO2ac53C7f5zuH+blFHbPYf5+WI5h9/U5HOefy83+5Xunp/sp7MJ8mu5CE5abu5dPx9Nhmb78vtnvw7kJ8/Jj+hN28XzdhGk5zad5eqO8fnj6tjze3U4Plx/47Pkm3B+Ol0cOy8tvu2C+1JSGq9yEp8vX/VU+n5v/SGkzKa+Qus2kfoXUbyaVd1L6nJQ3k8YV0uBXHEijJ3Wfk4p3B6TqqwDcxdajQFSMvqIIlTyKDG6v824Ntb3Q0xoqe1W0VttLPa6p2l7r9R3VAqr4UCBU9agI6dn6LQiqUvQoUpV8xBCq8ygy2PtkIFT225lQg0fRWo3eIKGKTwYyWH0yAKprPQoMdtEbJNT2am/XDHY++gjVexQZzN4goTZXe1wL5G7UKUqiiu4SpKlqEmjqW+0ONPU+10mTj3Ui+VQnd712RySf6eRu0DlMJJ/o5K5od0SqOjnBXfZxTqSoSeAuJ+2OSJ1OTSL1mkTrlHVTIJI/pJO7zTUeV3I8F91ciFS1JnA3tFoTkaLuCPAP1pA0iYYSnU5f0tTrjkCkrEnkbtDuiDTq9CWSz3FaJz9zAdLoRy40mvKnctLkc5w0+XkLkXpNInf+RE4kn+NEGrUmWqeiNRHJ5ziNOn2OEylqErgrSbsj0uYajytJV3pNonXyOQ7j/OJn5xlIo+4IRPKzc3JXdUcATdXnOJH85BzcVX8/RKROdwRy53OcSFlrIneD1kQkn+PkrmgSaaq6I2S6Hmo1qidU1PmLKB/laLDT/QVRvUahwc2VHoc1VYNuMahq1ChUVXSTGQjlE51Q4jb0HTUSKuokRpQPdTToUx1V+dtQVOVvQxHlgx0N+mRHlD+iI6pqVbRWyWc7ovwpnQwmn+2I6jQKDfpsR1TWKYoGB90mEOWzHQ0WrQpR/ja00Hsgrc4rREW9cSqh/G0oovxtKBr0I3REZb1x0OCgtzOiRq0KDRatClFV70EyuP1C9ANFqrbfiH5s51fUdfP27uTun1ctm/Breji+PpRK7MeaxlLS5c8xnM9/AUMCEGw=
+const simulate = (importString) => {
+  const importedBp = new Blueprint(importString);
+  let starterGrid = new Grid(importedBp);
+  starterGrid.calculateOptimisticScorePerTile();
+  //Create a greedy branch as a reference point
+  let greedyBranch = new Branch(starterGrid, []);
+  greedyBranch.greedyAutoComplete()
 
-console.log("Greedy branch:");
-console.log(greedyBranch.toString());
-console.log(greedyBranch.toBlueprint().encode());
-console.log("Score:", greedyBranch.getScore());
+  console.log("Greedy branch:");
+  console.log(greedyBranch.toString());
+  console.log(greedyBranch.toBlueprint().encode());
+  console.log("Score:", greedyBranch.getScore());
+  displayBranch("canvas-left", greedyBranch, starterGrid)
 
 
-const startTime = Date.now();
-let heuristicMult = 0.5;
-let startingBranch = new Branch(starterGrid, []);
-let maxScore = greedyBranch.getScore();
-let bestBranch = greedyBranch;
+  const startTime = Date.now();
+  let startingBranch = new Branch(starterGrid, []);
+  let maxScore = greedyBranch.getScore();
+  let bestBranch = greedyBranch;
 
-const branches = new PriorityQueue((a, b) => a.priority - b.priority)
-branches.enq(startingBranch, startingBranch.getPriority(heuristicMult))
+  let heuristicMult = 0.5;
+  const branches = new PriorityQueue((a, b) => a.priority - b.priority)
+  branches.enq(startingBranch, startingBranch.getPriority(heuristicMult))
 
-let evaluatedGrids = new Map();
+  let evaluatedGrids = new Map();
 
-let evaluatedCount = 0;
-let skippedCount = 0;
-let heuristicsSkipCount = 0;
-let hashingSkipCount = 0;
-let lastPrintTime = 0;
+  let evaluatedCount = 0;
+  let skippedCount = 0;
+  let heuristicsSkipCount = 0;
+  let hashingSkipCount = 0;
+  let lastPrintTime = 0;
 
-while (!branches.isEmpty()) {
-  let branch = branches.deq();
-  evaluatedCount++;
+  while (!branches.isEmpty()) {
+    let branch = branches.deq();
+    evaluatedCount++;
 
-  const nextSpace = branch.grid.findNextOpenSpace();
-  if (!nextSpace) {
-    if (branch.score > maxScore) {
-      maxScore = branch.score;
-      bestBranch = branch;
+    const nextSpace = branch.grid.findNextOpenSpace();
+    if (!nextSpace) {
+      if (branch.score > maxScore) {
+        maxScore = branch.score;
+        bestBranch = branch;
+      }
+      continue;
     }
-    continue;
-  }
 
-  const { x, y } = nextSpace;
-  for (const prototype of allBuildingPrototypes) {
-    if (branch.grid.canPlaceBuilding(x, y, prototype)) {
-      let newBranch = branch.clone();
-      newBranch.placeBuilding(x, y, prototype);
+    const { x, y } = nextSpace;
+    for (const prototype of allBuildingPrototypes) {
+      if (branch.grid.canPlaceBuilding(x, y, prototype)) {
+        let newBranch = branch.clone();
+        newBranch.placeBuilding(x, y, prototype);
 
-      const key = newBranch.grid.getKey()
-      const existingScore = evaluatedGrids.get(key);
-      if (existingScore !== undefined && existingScore >= newBranch.score) {
-        hashingSkipCount++;
-        continue;
-      }
-      else {
-        evaluatedGrids.set(key, newBranch.score)
-      }
-
-      /*let shouldSkip = false;
-
-      branch.grid.forEachCoord((loopx, loopy, tile) => {
-        for (const otherPrototype of allBuildingPrototypes) {
-          if (otherPrototype.size === 1) {
-            continue
-          }
-          if (branch.wouldThisBuildingBeMoreOptimal(loopx, loopy, otherPrototype)) {
-            shouldSkip = true;
-            return false;
-          }
+        const key = newBranch.grid.getKey()
+        const existingScore = evaluatedGrids.get(key);
+        if (existingScore !== undefined && existingScore >= newBranch.score) {
+          hashingSkipCount++;
+          continue;
         }
-      });
+        else {
+          evaluatedGrids.set(key, newBranch.score)
+        }
 
-      if (shouldSkip) {
-        heuristicsSkipCount++;
-        continue;
-      }*/
+        /*let shouldSkip = false;
+  
+        branch.grid.forEachCoord((loopx, loopy, tile) => {
+          for (const otherPrototype of allBuildingPrototypes) {
+            if (otherPrototype.size === 1) {
+              continue
+            }
+            if (branch.wouldThisBuildingBeMoreOptimal(loopx, loopy, otherPrototype)) {
+              shouldSkip = true;
+              return false;
+            }
+          }
+        });
+  
+        if (shouldSkip) {
+          heuristicsSkipCount++;
+          continue;
+        }*/
 
-      newBranch.calculateOptimisticRemainingScore();
-      const heuristicMaxScore = newBranch.score + newBranch.optimisticRemainingScore * 1;
-      if (heuristicMaxScore >= maxScore) {
-        branches.enq(newBranch, newBranch.getPriority(heuristicMult))
+        newBranch.calculateOptimisticRemainingScore();
+        const heuristicMaxScore = newBranch.score + newBranch.optimisticRemainingScore * 1;
+        if (heuristicMaxScore >= maxScore) {
+          branches.enq(newBranch, newBranch.getPriority(heuristicMult))
+        }
+        else {
+          skippedCount++;
+        }
+      }
+    }
+
+    const currentTime = Date.now();
+    if (currentTime - lastPrintTime >= 5000) {
+      lastPrintTime = currentTime;
+      if (bestBranch === greedyBranch) {
+        console.log("Best Branch is still the greedy branch!");
       }
       else {
-        skippedCount++;
+        console.log("Best Branch So Far:");
+        console.log(bestBranch.toString());
+        console.log(bestBranch.toBlueprint().encode());
+        console.log("Score:", bestBranch.score);
       }
+      console.log("Being evaluated now:");
+      console.log(branch.toString());
+      console.log(branch.toBlueprint().encode());
+      console.log("Score:", branch.score, "Potential:", branch.optimisticRemainingScore);
+      console.log("Branches Evaluated:", evaluatedCount);
+      console.log("Branches Skipped:", skippedCount);
+      console.log("Skipped by heuristics:", heuristicsSkipCount);
+      console.log("Skipped by hashing:", hashingSkipCount);
+      console.log("Branches in Queue:", branches.size());
+      setTimeout(() => {
+        // Continue the loop in the next event loop iteration
+        window.requestAnimationFrame(mainLoop);
+      }, 0);
     }
   }
 
-  const currentTime = Date.now();
-  if (currentTime - lastPrintTime >= 5000) {
-    lastPrintTime = currentTime;
-    if (bestBranch === greedyBranch) {
-      console.log("Best Branch is still the greedy branch!");
-    }
-    else {
-      console.log("Best Branch So Far:");
-      console.log(bestBranch.toString());
-      console.log(bestBranch.toBlueprint().encode());
-      console.log("Score:", bestBranch.score);
-    }
-    console.log("Being evaluated now:");
-    console.log(branch.toString());
-    console.log(branch.toBlueprint().encode());
-    console.log("Score:", branch.score, "Potential:", branch.optimisticRemainingScore);
-    console.log("Branches Evaluated:", evaluatedCount);
-    console.log("Branches Skipped:", skippedCount);
-    console.log("Skipped by heuristics:", heuristicsSkipCount);
-    console.log("Skipped by hashing:", hashingSkipCount);
-    console.log("Branches in Queue:", branches.size());
-    setTimeout(() => {
-      // Continue the loop in the next event loop iteration
-      window.requestAnimationFrame(mainLoop);
-    }, 0);
-  }
+
+  const endTime = Date.now();
+  console.log(`Found an optimal solution in ${(endTime - startTime) / 1000} seconds:`);
+  console.log(bestBranch.toString());
+  console.log(bestBranch.toBlueprint().encode());
+  console.log("Score:", bestBranch.score);
+  console.log("Branches Evaluated:", evaluatedCount);
+  console.log("Branches Skipped:", skippedCount);
+  console.log("Skipped by heuristics:", heuristicsSkipCount);
+  console.log("Skipped by hashing:", hashingSkipCount);
+
+  displayBranch("canvas-left", greedyBranch, starterGrid)
+  displayBranch("canvas-right", bestBranch, starterGrid)
 }
 
+function displayBranch(elemId, branch, baseGrid) {
+  const pixelsPerUnit = 20;
+  const borderSize = 2;
 
-const endTime = Date.now();
-console.log(`Found the optimal solution in ${(endTime - startTime) / 1000} seconds:`);
-console.log(bestBranch.toString());
-console.log(bestBranch.toBlueprint().encode());
-console.log("Score:", bestBranch.score);
-console.log("Branches Evaluated:", evaluatedCount);
-console.log("Branches Skipped:", skippedCount);
-console.log("Skipped by heuristics:", heuristicsSkipCount);
-console.log("Skipped by hashing:", hashingSkipCount);
+  const canvas = document.getElementById(elemId);
+  const ctx = canvas.getContext('2d');
 
-//debugger
+  //Clear the canvas
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.setTransform(1, 0, 0, 1, 0, 0)
 
-window.Blueprint = Blueprint; // This makes it accessible globally if needed. Not sure if needed
+  // Scale the canvas
+  let maxX = baseGrid.width;
+  let maxY = baseGrid.height;
+  const logicalWidth = maxX * pixelsPerUnit;
+  const logicalHeight = maxY * pixelsPerUnit;
+  const scaleX = canvas.width / logicalWidth;
+  const scaleY = canvas.height / logicalHeight;
+  const scale = Math.min(scaleX, scaleY);
+  ctx.scale(scale, scale);
+
+  // Draw the 2D grid
+  ctx.lineWidth = 1 / scale; // Grid line width
+  ctx.strokeStyle = 'black'; // Grid line color
+
+  for (let i = 0; i < baseGrid.twodee.length; i++) {
+    for (let j = 0; j < baseGrid.twodee[i].length; j++) {
+      const x = i * pixelsPerUnit;
+      const y = j * pixelsPerUnit;
+
+      if (baseGrid.twodee[i][j]) {
+
+        ctx.strokeRect(x, y, pixelsPerUnit, pixelsPerUnit); // Draw the grid cell
+      }
+    }
+  }
+
+  //Actually draw the thing
+  branch.buildingsPlaced.forEach(building => {
+    const size = building.prototype.size * pixelsPerUnit;
+    const x = building.x * pixelsPerUnit;
+    const y = building.y * pixelsPerUnit;
+
+    ctx.fillStyle = building.prototype.fillColor;
+    ctx.clearRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
+    ctx.fillRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
+
+    ctx.strokeStyle = building.prototype.borderColor;
+    ctx.lineWidth = 2; // Border width
+    ctx.strokeRect(x + borderSize / 2, y + borderSize / 2, size - borderSize, size - borderSize);
+  });
+}
+
+document.getElementById('search-form').addEventListener('submit', function (event) {
+  event.preventDefault();
+  const input = document.getElementById('search-input').value;
+  simulate(input);
+});
