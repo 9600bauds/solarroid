@@ -12,6 +12,11 @@ class BuildingPrototype {
     this.score = score;
     this.name = name;
     this.scorePerTile = score / size / size;
+    this.area = size * size;
+  }
+
+  toString() {
+    return `${this.name}, pertile ${this.scorePerTile.toFixed(2)}`;
   }
 }
 
@@ -29,6 +34,10 @@ class PlacedBuilding {
     this.x = x;
     this.y = y;
     this.prototype = prototype;
+  }
+
+  toString() {
+    return `@${x}-${y} ${this.prototype.name}`;
   }
 
   intersectsPoint(x, y) {
@@ -119,7 +128,9 @@ class Grid {
   forEachCoord(callback) {
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
-        callback(x, y, this.twodee[x][y]);
+        if (callback(x, y, this.twodee[x][y]) === false) { // Stop iterating if callback returns false
+          return;
+        }
       }
     }
   }
@@ -187,6 +198,38 @@ class Branch {
     this.score = this.getScore()
     this.calculateOptimisticRemainingScore()
   }
+
+  wouldThisBuildingBeMoreOptimal(x, y, prototype) {
+    const size = prototype.size;
+
+    let x2 = x + size;
+    let y2 = y + size;
+    let thisArea = 0;
+    let thisScore = 0;
+    let theseBuildings = [];
+    for (const building of this.buildingsPlaced) {
+      if (!building.intersectsRectangle(x, y, x2, y2)) {
+        continue
+      }
+      if (!building.isFullyContainedByRectangle(x, y, x2, y2)) {
+        return false; //We are bisecting a building!
+      }
+      else {
+        theseBuildings.push(building)
+        thisScore += building.prototype.score;
+        thisArea += building.prototype.area;
+      }
+    }
+    if (thisArea < prototype.area) {
+      return false; //This area was not 100% full of buildings
+    }
+    if (prototype.score > thisScore) {
+      //this.placeBuilding(x, y, prototype)
+      //console.log(this.toString(), this, x, y, prototype.name, "would be better")
+      //debugger
+      return true;
+    }
+    return false;
   }
 
   placeBuilding(x, y, prototype) {
@@ -312,6 +355,7 @@ let skippedCount = 0;
 let heuristicsSkipCount = 0;
 let lastPrintTime = 0;
 
+let branchesEvaluated = [];
 while (!branches.isEmpty()) {
   let branch = branches.deq();
   evaluatedCount++;
@@ -332,18 +376,25 @@ while (!branches.isEmpty()) {
       newBranch.placeBuilding(x, y, prototype);
       newBranch.calculateOptimisticRemainingScore();
 
-      if (prototype.size == 1) {
-        let coordsToCheck = [[-1, -1], [-1, 0], [0, -1]];
-        let allAreSize1 = coordsToCheck.every(([dx, dy]) => {
-          const building = newBranch.getIntersectingBuilding(x + dx, y + dy);
-          return building && building.prototype.size === 1;
-        });
+      let shouldSkip = false;
 
-        if (allAreSize1) {
-          heuristicsSkipCount++;
-          continue;
+      branch.grid.forEachCoord((loopx, loopy, tile) => {
+        for (const otherPrototype of allBuildingPrototypes) {
+          if (otherPrototype.size === 1) {
+            continue
+          }
+          if (branch.wouldThisBuildingBeMoreOptimal(loopx, loopy, otherPrototype)) {
+            shouldSkip = true;
+            return false;
+          }
         }
+      });
+
+      if (shouldSkip) {
+        heuristicsSkipCount++;
+        continue;
       }
+
       const heuristicMaxScore = newBranch.score + newBranch.optimisticRemainingScore * 1;
       if (heuristicMaxScore >= maxScore) {
         branches.enq(newBranch, newBranch.getPriority(heuristicMult))
