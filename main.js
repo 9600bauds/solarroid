@@ -241,6 +241,7 @@ class Branch {
     }
     let newPlacedBuilding = new PlacedBuilding(x, y, prototype);
     this.buildingsPlaced.push(newPlacedBuilding);
+    this.score += prototype.score;
   }
 
   getIntersectingBuilding(x, y) {
