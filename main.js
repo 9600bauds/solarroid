@@ -24,6 +24,46 @@ const allBuildingPrototypes = [
 //Sort by their score per tile (higher is first)
 allBuildingPrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
 
+class PlacedBuilding {
+  constructor(x, y, prototype) {
+    this.x = x;
+    this.y = y;
+    this.prototype = prototype;
+  }
+
+  intersectsPoint(x, y) {
+    const size = this.prototype.size;
+    return (x >= this.x && x < this.x + size &&
+      y >= this.y && y < this.y + size);
+  }
+
+  isFullyContainedByRectangle(x1, y1, x2, y2) {
+    const size = this.prototype.size;
+    return (this.x >= x1 && this.x + size <= x2 &&
+      this.y >= y1 && this.y + size <= y2);
+  }
+
+  intersectsRectangle(x1, y1, x2, y2) {
+    const size = this.prototype.size;
+    return !(this.x + size <= x1 || this.x >= x2 ||
+      this.y + size <= y1 || this.y >= y2);
+  }
+
+  isBisectedByRectangle(x1, y1, x2, y2) {
+    return this.intersectsRectangle(x1, y1, x2, y2) && !this.isFullyContainedByRectangle(x1, y1, x2, y2)
+  }
+
+  getCorners() {
+    const size = this.prototype.size;
+    return [
+      { x: this.x, y: this.y },
+      { x: this.x + size, y: this.y },
+      { x: this.x, y: this.y + size },
+      { x: this.x + size, y: this.y + size }
+    ];
+  }
+}
+
 class Grid {
   constructor(arg) {
     if (arg instanceof Grid) {
@@ -145,7 +185,8 @@ class Branch {
     this.grid = new Grid(grid);
     this.buildingsPlaced = buildingsPlaced.slice(); // Shallow copy
     this.score = this.getScore()
-    this.optimisticRemainingScore = this.getOptimisticRemainingScore()
+    this.calculateOptimisticRemainingScore()
+  }
   }
 
   placeBuilding(x, y, prototype) {
@@ -205,7 +246,7 @@ class Branch {
     return this.buildingsPlaced.reduce((sum, building) => sum + building.prototype.score, 0);
   }
 
-  getOptimisticRemainingScore() {
+  calculateOptimisticRemainingScore() {
     let sum = 0;
     if (!this.grid.optimisticScorePerTile) {
       this.grid.calculateOptimisticScorePerTile()
@@ -213,6 +254,7 @@ class Branch {
     this.grid.forEachOpenTile((x, y) => {
       sum += this.grid.optimisticScorePerTile[x][y];
     });
+    this.optimisticRemainingScore = sum;
     return sum;
   }
 
@@ -235,19 +277,11 @@ class Branch {
   }
 }
 
-class PlacedBuilding {
-  constructor(x, y, prototype) {
-    this.x = x;
-    this.y = y;
-    this.prototype = prototype;
-  }
-
-  intersectsPoint(x, y) {
-    const size = this.prototype.size;
-    return (x >= this.x && x < this.x + size &&
-      y >= this.y && y < this.y + size)
-  }
-}
+const testSquare = new PlacedBuilding(1, 1, new BuildingPrototype(4, 4, "test-4x4"))
+console.assert(testSquare.isFullyContainedByRectangle(1, 1, 5, 5))
+console.assert(!testSquare.isFullyContainedByRectangle(1, 1, 4, 4))
+console.assert(testSquare.intersectsRectangle(2, 2, 5, 5))
+console.assert(testSquare.isBisectedByRectangle(3, 3, 6, 6))
 
 //const importString = '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'
 //const importString = '0eNqdm9tOU1EURf9lP1ey75f+iiEG9MQ0KaeEFpWQ/rsFXhpl5Kwz38TY4Rx6uvdkrfLq7vfP0+PTbj657avbfT/MR7f9+uqOu5/z3f7t904vj5Pbut1penAbN989vH11PB3m6cvvu/3enTduN/+Y/rhtON9u3DSfdqfd9EF5/+Ll2/z8cD89Xf7AZ6/fuMfD8fKSw/z2t10wX1qIN2XjXi6/DL3flPN58x8qWlFhEZWsKL+IykaUH4uoYkX1RVS1otoiqln/ra5Q9XNUt6LqImpYUWURFbyVlZdZQcjVgBWFXMQyP/Fp2TEL72liFSEXOVYhF7GacNiQYxdOG2INIRc4Ri/kIlYQjkFwjFE4B4mVhFzkmIVcxCrCAU2O5sN++ViNTchFjl3IRSzrc++Xz+hkfe798t2RgsACx2Q+76+erwysJLAKsLJwbVOuIrQJYlWBRY5NcCRWF+5tclR6DrCyF1jgmIPgSKwo3NvkqPQcYmWBRY5FcCRWFe5tclR6DrG6wCLHITgCq3jh3gbHovQcYkWBRY5JcCRWFu5tclR6DrGUb2rJsQmOxOpCNyHHIfQJYFWl54BjDYIjsczP/fJ5X83P/fJ5X7PAIkfzeX/13o7AqkKXI1YTciVgdSEXsYbQ5cCxeaHLESsIucCxRSEXsZLQ5cgxC12OWEXIRY5VyEWsJnQ5cuxClyPWEHKBY/dCLmIFocuBY49ClyNWEnKRYxZyEasIXY4cq9DliNWEXOTYhVzEGkKXA8fhhS5HrCDkAscRhVzESkKXI8csdDliFSEXOVYhF7Ga0OXIsQt9lVhDyJVob+WFYAgzP/nLJ37wUaiZgWDKLNMTLAswTFaERofJlHEmwpStLWoqe1uEDaHVkWZQRpoIU2aapGlf3hYDLAnNDjWVsSbClLkmalYhGcKa0O5QUxltIkyZbZKmfYkbDLAgNDzSjMp4E2HKfBM1lc/sIKwILQ81lREnwpQZJ2p2IRnClG0uaUrrXIQpc07SNC90veEOMG90veEOSMqoE2FFSIaaVUiGsCZ0WtTsAgyTjfWVqnX6PJZfX/YYFoRkg2BRSIawtL6fsWZe388YVoRkqFmFZAhr6/sZa/b1/YxhQ0hGmuYV73UyhIX1/Qw1i/CpZYYJn1tmzSwkQ5jw2WXWrOv7GcOakAw1u5AMYWN9P0NN+7LXcAfYt72GO8C+7jXcAfZ9r+EOsC98DXeAeePrDXeAeeXrDXdAFWahDBOGoQwTpqH4H9CEaSjDzO8Aw0lrXvx6w0lr3vx6w4ViXv36f6+6283Hjwdtr36aaON+TU/H95fFfqkeI7be46WF1/P5L25sU9A='
@@ -296,6 +330,7 @@ while (!branches.isEmpty()) {
     if (branch.grid.canPlaceBuilding(x, y, prototype)) {
       let newBranch = branch.clone();
       newBranch.placeBuilding(x, y, prototype);
+      newBranch.calculateOptimisticRemainingScore();
 
       if (prototype.size == 1) {
         let coordsToCheck = [[-1, -1], [-1, 0], [0, -1]];
