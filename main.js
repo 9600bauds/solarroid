@@ -8,11 +8,11 @@ const isValidSpaceEntity = (entity) => {
 }
 
 class BuildingPrototype {
-  constructor(size, score, name, fillColor, borderColor) {
+  constructor(size, scorePerTile, name, fillColor, borderColor) {
     this.size = size;
-    this.score = score;
     this.name = name;
-    this.scorePerTile = score / size / size;
+    this.scorePerTile = scorePerTile;
+    this.score = scorePerTile * size * size;
     this.area = size * size;
     this.fillColor = fillColor;
     this.borderColor = borderColor;
@@ -24,9 +24,9 @@ class BuildingPrototype {
 }
 
 const allBuildingPrototypes = [
-  new BuildingPrototype(4, 1000, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
-  new BuildingPrototype(3, 250, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
-  new BuildingPrototype(2, 30, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)'),
+  new BuildingPrototype(4, 1050, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
+  new BuildingPrototype(3, 100, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
+  new BuildingPrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)'),
   new BuildingPrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)')
 ];
 //Sort by their score per tile (higher is first)
@@ -341,6 +341,7 @@ const simulate = (importString) => {
   const importedBp = new Blueprint(importString);
   let starterGrid = new Grid(importedBp);
   starterGrid.calculateOptimisticScorePerTile();
+  let startingBranch = new Branch(starterGrid, []);
   //Create a greedy branch as a reference point
   let greedyBranch = new Branch(starterGrid, []);
   greedyBranch.greedyAutoComplete()
@@ -349,11 +350,11 @@ const simulate = (importString) => {
   console.log(greedyBranch.toString());
   console.log(greedyBranch.toBlueprint().encode());
   console.log("Score:", greedyBranch.getScore());
-  displayBranch("canvas-left", greedyBranch, starterGrid)
-
+  console.log("Buildings placed:", greedyBranch.buildingsPlaced.length);
+  displayBranch("canvas-left", startingBranch, starterGrid)
+  displayBranch("canvas-right", greedyBranch, starterGrid)
 
   const startTime = Date.now();
-  let startingBranch = new Branch(starterGrid, []);
   let maxScore = greedyBranch.getScore();
   let bestBranch = greedyBranch;
 
@@ -462,12 +463,13 @@ const simulate = (importString) => {
   console.log(bestBranch.toString());
   console.log(bestBranch.toBlueprint().encode());
   console.log("Score:", bestBranch.score);
+  console.log("Buildings placed:", bestBranch.buildingsPlaced.length);
   console.log("Branches Evaluated:", evaluatedCount);
   console.log("Branches Skipped:", skippedCount);
   console.log("Skipped by heuristics:", heuristicsSkipCount);
   console.log("Skipped by hashing:", hashingSkipCount);
 
-  displayBranch("canvas-left", greedyBranch, starterGrid)
+  displayBranch("canvas-left", startingBranch, starterGrid)
   displayBranch("canvas-right", bestBranch, starterGrid)
 }
 
