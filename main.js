@@ -7,7 +7,7 @@ const isValidSpaceEntity = (entity) => {
   return entity.name.search("wall") >= 0
 }
 
-class BuildingPrototype {
+class PiecePrototype {
   constructor(size, scorePerTile, name, fillColor, borderColor) {
     this.size = size;
     this.name = name;
@@ -23,16 +23,16 @@ class BuildingPrototype {
   }
 }
 
-const allBuildingPrototypes = [
-  new BuildingPrototype(4, 1050, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
-  new BuildingPrototype(3, 100, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
-  new BuildingPrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)'),
-  new BuildingPrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)')
+const allPiecePrototypes = [
+  new PiecePrototype(4, 1050, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
+  new PiecePrototype(3, 100, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
+  new PiecePrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)'),
+  new PiecePrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)')
 ];
 //Sort by their score per tile (higher is first)
-allBuildingPrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
+allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
 
-class PlacedBuilding {
+class PlacedPiece {
   constructor(x, y, prototype) {
     this.x = x;
     this.y = y;
@@ -80,7 +80,7 @@ class Grid {
   constructor(arg) {
     if (arg instanceof Grid) {
       let otherGrid = arg;
-      this.twodee = otherGrid.twodee.map(row => [...row]); // Deep copy
+      this.openSpaces = otherGrid.openSpaces.map(row => [...row]); // Deep copy
       this.height = otherGrid.height;
       this.width = otherGrid.width;
     }
@@ -107,7 +107,7 @@ class Grid {
       }
       this.height = Math.abs(maxY - minY) + 1
       this.width = Math.abs(maxX - minX) + 1
-      this.twodee = Array(this.width).fill().map(() => Array(this.height).fill(false));
+      this.openSpaces = Array(this.width).fill().map(() => Array(this.height).fill(false));
       //Second pass: Populate the grid
       for (const pos in bp.entityPositionGrid) {
         const entity = bp.entityPositionGrid[pos]
@@ -120,22 +120,22 @@ class Grid {
         const thisY = parseInt(split[1])
         // Adjust coordinates to make bottom-left (0,0)
         const adjustedX = thisX - minX;
-        const adjustedY = maxY - thisY;
+        const adjustedY = thisY - minY;
 
         // Populate the grid
-        this.twodee[adjustedX][adjustedY] = true;
+        this.openSpaces[adjustedX][adjustedY] = true;
       }
     }
   }
 
   getKey() {
-    return this.twodee.map(row => row.map(cell => cell ? '1' : '0').join('')).join('');
+    return this.openSpaces.map(row => row.map(cell => cell ? '1' : '0').join('')).join('');
   }
 
   forEachCoord(callback) {
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
-        if (callback(x, y, this.twodee[x][y]) === false) { // Stop iterating if callback returns false
+        if (callback(x, y, this.openSpaces[x][y]) === false) { // Stop iterating if callback returns false
           return;
         }
       }
@@ -145,7 +145,7 @@ class Grid {
   forEachOpenTile(callback) {
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
-        if (this.twodee[x][y]) {
+        if (this.openSpaces[x][y]) {
           if (callback(x, y) === false) { // Stop iterating if callback returns false
             return;
           }
@@ -167,11 +167,11 @@ class Grid {
     return (x >= 0 && y >= 0 && x < this.width && y < this.height)
   }
 
-  canPlaceBuilding(x, y, prototype) {
+  canPlacePiece(x, y, prototype) {
     const size = prototype.size;
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
-        if (x + i >= this.width || y + j >= this.height || !this.twodee[x + i][y + j]) {
+        if (x + i >= this.width || y + j >= this.height || !this.openSpaces[x + i][y + j]) {
           return false;
         }
       }
@@ -182,9 +182,9 @@ class Grid {
   calculateOptimisticScorePerTile() {
     this.optimisticScorePerTile = Array(this.width).fill().map(() => Array(this.height).fill(0));
     this.forEachOpenTile((x, y) => {
-      for (const prototype of allBuildingPrototypes) {
-        if (this.canPlaceBuilding(x, y, prototype)) {
-          //Mark every tile that that building could theoretically optimistically occupy with its score per tile
+      for (const prototype of allPiecePrototypes) {
+        if (this.canPlacePiece(x, y, prototype)) {
+          //Mark every tile that that piece could theoretically optimistically occupy with its score per tile
           for (let i = 0; i < prototype.size; i++) {
             for (let j = 0; j < prototype.size; j++) {
               const oldVal = this.optimisticScorePerTile[x + i][y + j];
@@ -199,39 +199,39 @@ class Grid {
 }
 
 class Branch {
-  constructor(grid, buildingsPlaced) {
+  constructor(grid, piecesPlaced) {
     this.grid = new Grid(grid);
-    this.buildingsPlaced = buildingsPlaced.slice(); // Shallow copy
+    this.piecesPlaced = piecesPlaced.slice(); // Shallow copy
     this.score = this.getScore()
     this.calculateOptimisticRemainingScore()
   }
 
-  wouldThisBuildingBeMoreOptimal(x, y, prototype) {
+  wouldThisPieceBeMoreOptimal(x, y, prototype) {
     const size = prototype.size;
 
     let x2 = x + size;
     let y2 = y + size;
     let thisArea = 0;
     let thisScore = 0;
-    let theseBuildings = [];
-    for (const building of this.buildingsPlaced) {
-      if (!building.intersectsRectangle(x, y, x2, y2)) {
+    let thesePieces = [];
+    for (const piece of this.piecesPlaced) {
+      if (!piece.intersectsRectangle(x, y, x2, y2)) {
         continue
       }
-      if (!building.isFullyContainedByRectangle(x, y, x2, y2)) {
-        return false; //We are bisecting a building!
+      if (!piece.isFullyContainedByRectangle(x, y, x2, y2)) {
+        return false; //We are bisecting a piece!
       }
       else {
-        theseBuildings.push(building)
-        thisScore += building.prototype.score;
-        thisArea += building.prototype.area;
+        thesePieces.push(piece)
+        thisScore += piece.prototype.score;
+        thisArea += piece.prototype.area;
       }
     }
     if (thisArea < prototype.area) {
-      return false; //This area was not 100% full of buildings
+      return false; //This area was not 100% full of pieces
     }
     if (prototype.score > thisScore) {
-      //this.placeBuilding(x, y, prototype)
+      //this.placePiece(x, y, prototype)
       //console.log(this.toString(), this, x, y, prototype.name, "would be better")
       //debugger
       return true;
@@ -239,25 +239,42 @@ class Branch {
     return false;
   }
 
-  placeBuilding(x, y, prototype) {
+  placePiece(x, y, prototype) {
     const size = prototype.size;
     for (let i = 0; i < size; i++) {
       for (let j = 0; j < size; j++) {
-        this.grid.twodee[x + i][y + j] = false; // Mark the grid as filled
+        this.grid.openSpaces[x + i][y + j] = false; // Mark the grid as filled
       }
     }
-    let newPlacedBuilding = new PlacedBuilding(x, y, prototype);
-    this.buildingsPlaced.push(newPlacedBuilding);
+    let newPlacedPiece = new PlacedPiece(x, y, prototype);
+    this.piecesPlaced.push(newPlacedPiece);
     this.score += prototype.score;
   }
 
-  getIntersectingBuilding(x, y) {
+  removePiece(placedPiece) {
+    const x = placedPiece.x;
+    const y = placedPiece.y;
+    const size = placedPiece.prototype.size;
+    for (let i = 0; i < size; i++) {
+      for (let j = 0; j < size; j++) {
+        this.grid.openSpaces[x + i][y + j] = true; // Mark the grid as open
+      }
+    }
+    // Remove the piece from piecesPlaced
+    // Yes this is how you have to do it in javascript because javascript is just like that
+    this.piecesPlaced = this.piecesPlaced.filter(
+      piece => piece !== placedPiece
+    );
+    this.score -= placedPiece.prototype.score;
+  }
+
+  getIntersectingPiece(x, y) {
     if (!this.grid.isInBounds(x, y)) {
       return null
     }
-    for (const building of this.buildingsPlaced) {
-      if (building.intersectsPoint(x, y)) {
-        return building;
+    for (const piece of this.piecesPlaced) {
+      if (piece.intersectsPoint(x, y)) {
+        return piece;
       }
     }
     return null;
@@ -267,13 +284,13 @@ class Branch {
     let out = "";
     const lastYIndex = this.grid.height - 1;
     const lastXIndex = this.grid.width - 1;
-    for (let curY = lastYIndex; curY >= 0; curY--) {
+    for (let curY = 0; curY <= lastYIndex; curY++) {
       for (let curX = 0; curX <= lastXIndex; curX++) {
-        let intersectingBuilding = this.getIntersectingBuilding(curX, curY)
-        if (intersectingBuilding) {
-          out += intersectingBuilding.prototype.size.toString()
+        let intersectingPiece = this.getIntersectingPiece(curX, curY)
+        if (intersectingPiece) {
+          out += intersectingPiece.prototype.size.toString()
         }
-        else if (this.grid.twodee[curX][curY]) {
+        else if (this.grid.openSpaces[curX][curY]) {
           out += "#";
         } else {
           out += "_";
@@ -286,15 +303,15 @@ class Branch {
 
   toBlueprint() {
     let newBp = new Blueprint();
-    for (const buildingPlaced of this.buildingsPlaced) {
-      let prototype = buildingPlaced.prototype;
-      newBp.createEntity(prototype.name, { x: buildingPlaced.x, y: buildingPlaced.y });
+    for (const piecePlaced of this.piecesPlaced) {
+      let prototype = piecePlaced.prototype;
+      newBp.createEntity(prototype.name, { x: piecePlaced.x, y: piecePlaced.y });
     }
     return newBp;
   }
 
   getScore() {
-    return this.buildingsPlaced.reduce((sum, building) => sum + building.prototype.score, 0);
+    return this.piecesPlaced.reduce((sum, piece) => sum + piece.prototype.score, 0);
   }
 
   calculateOptimisticRemainingScore() {
@@ -310,10 +327,10 @@ class Branch {
   }
 
   greedyAutoComplete() {
-    for (let prototype of allBuildingPrototypes) {
+    for (let prototype of allPiecePrototypes) {
       this.grid.forEachOpenTile((x, y) => {
-        if (this.grid.canPlaceBuilding(x, y, prototype)) {
-          this.placeBuilding(x, y, prototype);
+        if (this.grid.canPlacePiece(x, y, prototype)) {
+          this.placePiece(x, y, prototype);
         }
       });
     }
@@ -324,12 +341,12 @@ class Branch {
   }
 
   clone() {
-    return new Branch(this.grid, this.buildingsPlaced, this.optimisticScorePerTile);
+    return new Branch(this.grid, this.piecesPlaced, this.optimisticScorePerTile);
   }
 }
 
 // crude testing
-const testSquare = new PlacedBuilding(1, 1, new BuildingPrototype(4, 4, "test-4x4"))
+const testSquare = new PlacedPiece(1, 1, new PiecePrototype(4, 4, "test-4x4"))
 console.assert(testSquare.isFullyContainedByRectangle(1, 1, 5, 5))
 console.assert(!testSquare.isFullyContainedByRectangle(1, 1, 4, 4))
 console.assert(testSquare.intersectsRectangle(2, 2, 5, 5))
@@ -350,7 +367,7 @@ const simulate = (importString) => {
   console.log(greedyBranch.toString());
   console.log(greedyBranch.toBlueprint().encode());
   console.log("Score:", greedyBranch.getScore());
-  console.log("Buildings placed:", greedyBranch.buildingsPlaced.length);
+  console.log("Pieces placed:", greedyBranch.piecesPlaced.length);
   displayBranch("canvas-left", startingBranch, starterGrid)
   displayBranch("canvas-right", greedyBranch, starterGrid)
 
@@ -384,10 +401,10 @@ const simulate = (importString) => {
     }
 
     const { x, y } = nextSpace;
-    for (const prototype of allBuildingPrototypes) {
-      if (branch.grid.canPlaceBuilding(x, y, prototype)) {
+    for (const prototype of allPiecePrototypes) {
+      if (branch.grid.canPlacePiece(x, y, prototype)) {
         let newBranch = branch.clone();
-        newBranch.placeBuilding(x, y, prototype);
+        newBranch.placePiece(x, y, prototype);
 
         const key = newBranch.grid.getKey()
         const existingScore = evaluatedGrids.get(key);
@@ -402,11 +419,11 @@ const simulate = (importString) => {
         /*let shouldSkip = false;
   
         branch.grid.forEachCoord((loopx, loopy, tile) => {
-          for (const otherPrototype of allBuildingPrototypes) {
+          for (const otherPrototype of allPiecePrototypes) {
             if (otherPrototype.size === 1) {
               continue
             }
-            if (branch.wouldThisBuildingBeMoreOptimal(loopx, loopy, otherPrototype)) {
+            if (branch.wouldThisPieceBeMoreOptimal(loopx, loopy, otherPrototype)) {
               shouldSkip = true;
               return false;
             }
@@ -463,7 +480,7 @@ const simulate = (importString) => {
   console.log(bestBranch.toString());
   console.log(bestBranch.toBlueprint().encode());
   console.log("Score:", bestBranch.score);
-  console.log("Buildings placed:", bestBranch.buildingsPlaced.length);
+  console.log("Pieces placed:", bestBranch.piecesPlaced.length);
   console.log("Branches Evaluated:", evaluatedCount);
   console.log("Branches Skipped:", skippedCount);
   console.log("Skipped by heuristics:", heuristicsSkipCount);
@@ -498,29 +515,28 @@ function displayBranch(elemId, branch, baseGrid) {
   ctx.lineWidth = 1 / scale; // Grid line width
   ctx.strokeStyle = 'black'; // Grid line color
 
-  for (let i = 0; i < baseGrid.twodee.length; i++) {
-    for (let j = 0; j < baseGrid.twodee[i].length; j++) {
+  for (let i = 0; i < baseGrid.width; i++) {
+    for (let j = 0; j < baseGrid.height; j++) {
       const x = i * pixelsPerUnit;
       const y = j * pixelsPerUnit;
 
-      if (baseGrid.twodee[i][j]) {
-
+      if (baseGrid.openSpaces[i][j]) {
         ctx.strokeRect(x, y, pixelsPerUnit, pixelsPerUnit); // Draw the grid cell
       }
     }
   }
 
   //Actually draw the thing
-  branch.buildingsPlaced.forEach(building => {
-    const size = building.prototype.size * pixelsPerUnit;
-    const x = building.x * pixelsPerUnit;
-    const y = building.y * pixelsPerUnit;
+  branch.piecesPlaced.forEach(piece => {
+    const size = piece.prototype.size * pixelsPerUnit;
+    const x = piece.x * pixelsPerUnit;
+    const y = piece.y * pixelsPerUnit;
 
-    ctx.fillStyle = building.prototype.fillColor;
+    ctx.fillStyle = piece.prototype.fillColor;
     ctx.clearRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
     ctx.fillRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
 
-    ctx.strokeStyle = building.prototype.borderColor;
+    ctx.strokeStyle = piece.prototype.borderColor;
     ctx.lineWidth = 2; // Border width
     ctx.strokeRect(x + borderSize / 2, y + borderSize / 2, size - borderSize, size - borderSize);
   });
