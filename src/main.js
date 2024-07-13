@@ -14,21 +14,21 @@ console.assert(!testSquare.isFullyContainedByRectangle(1, 1, 4, 4))
 console.assert(testSquare.intersectsRectangle(2, 2, 5, 5))
 console.assert(testSquare.isBisectedByRectangle(3, 3, 6, 6))
 
-const someKindOfBacktrackingSearch = (startingBranch, piecePrototypes) => {
+const someKindOfBacktrackingSearch = (startingBranch, allPiecePrototypes, higherPieces, lesserPieces) => {
   //Create a greedy branch as a reference point
   let greedyBranch = startingBranch.clone()
-  greedyBranch.greedyAutoComplete(piecePrototypes)
+  greedyBranch.greedyAutoComplete(allPiecePrototypes)
 
   console.log("Greedy branch:");
   console.log(greedyBranch.toString());
   console.log(greedyBranch.toBlueprint().encode());
-  console.log("Score:", greedyBranch.getScore());
+  console.log("Score:", greedyBranch.score);
   console.log("Pieces placed:", greedyBranch.piecesPlaced.length);
   startingBranch.display("canvas-left")
   greedyBranch.display("canvas-right")
 
   const startTime = Date.now();
-  let maxScore = greedyBranch.getScore();
+  let maxScore = greedyBranch.score;
   let bestBranch = greedyBranch;
 
   let heuristicMult = 0.5;
@@ -57,7 +57,7 @@ const someKindOfBacktrackingSearch = (startingBranch, piecePrototypes) => {
     }
 
     const { x, y } = nextSpace;
-    for (const prototype of piecePrototypes) {
+    for (const prototype of allPiecePrototypes) {
       if (branch.grid.canPlacePiece(x, y, prototype)) {
         let newBranch = branch.clone();
         newBranch.placePiece(x, y, prototype);
@@ -91,7 +91,7 @@ const someKindOfBacktrackingSearch = (startingBranch, piecePrototypes) => {
           continue;
         }*/
 
-        newBranch.calculateOptimisticRemainingScore(piecePrototypes);
+        newBranch.calculateOptimisticRemainingScore(allPiecePrototypes);
         const heuristicMaxScore = newBranch.score + newBranch.optimisticRemainingScore * 1;
         if (heuristicMaxScore >= maxScore) {
           branches.enq(newBranch, newBranch.getPriority(heuristicMult))
@@ -149,6 +149,7 @@ const someKindOfBacktrackingSearch = (startingBranch, piecePrototypes) => {
 
 async function simulatedAnnealing(startingBranch, initialTemperature, coolingRate, maxIterations) {
   let currentBranch = startingBranch;
+  currentBranch.greedyAutoComplete()
   let currentScore = currentBranch.score;
   let temperature = initialTemperature;
   let iteration = 0;
@@ -192,14 +193,19 @@ function start(input) {
   ];
   //Sort by their score per tile (higher is first)
   allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
+  // Calculate the cutoff index for the top 50%
+  const cutoffIndex = Math.floor(allPiecePrototypes.length / 2);
+
+  // Split into higherPieces and lesserPieces
+  const higherPieces = allPiecePrototypes;
+  const lesserPieces = allPiecePrototypes.slice(cutoffIndex);
 
   const importedBp = new Blueprint(input);
   let starterGrid = new Grid(importedBp);
   let startingBranch = new Branch(starterGrid, starterGrid, []);
-  //startingBranch.greedyAutoComplete(allPiecePrototypes)
 
-  someKindOfBacktrackingSearch(startingBranch, allPiecePrototypes);
-  //simulatedAnnealing(startingBranch, 100, 0.95, 10000)
+  someKindOfBacktrackingSearch(startingBranch, allPiecePrototypes, higherPieces, lesserPieces);
+  //simulatedAnnealing(startingBranch, allPiecePrototypes, higherPieces, lesserPieces, 100, 0.95, 10000)
 }
 
 document.getElementById('search-form').addEventListener('submit', function (event) {
