@@ -23,15 +23,6 @@ class PiecePrototype {
   }
 }
 
-const allPiecePrototypes = [
-  new PiecePrototype(4, 1050, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
-  new PiecePrototype(3, 100, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
-  new PiecePrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)'),
-  new PiecePrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)')
-];
-//Sort by their score per tile (higher is first)
-allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
-
 class PlacedPiece {
   constructor(x, y, prototype) {
     this.x = x;
@@ -167,6 +158,10 @@ class Grid {
     return (x >= 0 && y >= 0 && x < this.width && y < this.height)
   }
 
+  isRectInBounds(x1, y1, x2, y2) {
+    return this.isInBounds(x1, y1) && this.isInBounds(x2, y2);
+  }
+
   canPlacePiece(x, y, prototype) {
     const size = prototype.size;
     for (let i = 0; i < size; i++) {
@@ -179,10 +174,10 @@ class Grid {
     return true;
   }
 
-  calculateOptimisticScorePerTile() {
+  calculateOptimisticScorePerTile(piecePrototypes) {
     this.optimisticScorePerTile = Array(this.width).fill().map(() => Array(this.height).fill(0));
     this.forEachOpenTile((x, y) => {
-      for (const prototype of allPiecePrototypes) {
+      for (const prototype of piecePrototypes) {
         if (this.canPlacePiece(x, y, prototype)) {
           //Mark every tile that that piece could theoretically optimistically occupy with its score per tile
           for (let i = 0; i < prototype.size; i++) {
@@ -199,11 +194,11 @@ class Grid {
 }
 
 class Branch {
-  constructor(grid, piecesPlaced) {
+  constructor(grid, startingGrid, piecesPlaced) {
     this.grid = new Grid(grid);
+    this.startingGrid = startingGrid;
     this.piecesPlaced = piecesPlaced.slice(); // Shallow copy
     this.score = this.getScore()
-    this.calculateOptimisticRemainingScore()
   }
 
   wouldThisPieceBeMoreOptimal(x, y, prototype) {
@@ -268,6 +263,34 @@ class Branch {
     this.score -= placedPiece.prototype.score;
   }
 
+  removePiecesInRect(x1, y1, x2, y2) {
+    const piecesToRemove = []; //intermediary because we can't iterate through the array while modifying it
+
+    for (const piece of this.piecesPlaced) {
+      if (piece.intersectsRectangle(x1, y1, x2, y2)) {
+        piecesToRemove.push(piece);
+      }
+    }
+
+    for (const piece of piecesToRemove) {
+      this.removePiece(piece);
+    }
+  }
+
+  removePiecesSmallerThan(size) {
+    const piecesToRemove = []; //intermediary because we can't iterate through the array while modifying it
+
+    for (const piece of this.piecesPlaced) {
+      if (piece.prototype.size < size) {
+        piecesToRemove.push(piece);
+      }
+    }
+
+    for (const piece of piecesToRemove) {
+      this.removePiece(piece);
+    }
+  }
+
   getIntersectingPiece(x, y) {
     if (!this.grid.isInBounds(x, y)) {
       return null
@@ -301,6 +324,58 @@ class Branch {
     return out;
   }
 
+  display(elemId) {
+    const pixelsPerUnit = 20;
+    const borderSize = 2;
+
+    const canvas = document.getElementById(elemId);
+    const ctx = canvas.getContext('2d');
+
+    //Clear the canvas
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.setTransform(1, 0, 0, 1, 0, 0)
+
+    // Scale the canvas
+    let maxX = this.startingGrid.width;
+    let maxY = this.startingGrid.height;
+    const logicalWidth = maxX * pixelsPerUnit;
+    const logicalHeight = maxY * pixelsPerUnit;
+    const scaleX = canvas.width / logicalWidth;
+    const scaleY = canvas.height / logicalHeight;
+    const scale = Math.min(scaleX, scaleY);
+    ctx.scale(scale, scale);
+
+    // Draw the 2D grid
+    ctx.lineWidth = 1 / scale; // Grid line width
+    ctx.strokeStyle = 'black'; // Grid line color
+
+    for (let i = 0; i < this.startingGrid.width; i++) {
+      for (let j = 0; j < this.startingGrid.height; j++) {
+        const x = i * pixelsPerUnit;
+        const y = j * pixelsPerUnit;
+
+        if (this.startingGrid.openSpaces[i][j]) {
+          ctx.strokeRect(x, y, pixelsPerUnit, pixelsPerUnit); // Draw the grid cell
+        }
+      }
+    }
+
+    //Actually draw the thing
+    this.piecesPlaced.forEach(piece => {
+      const size = piece.prototype.size * pixelsPerUnit;
+      const x = piece.x * pixelsPerUnit;
+      const y = piece.y * pixelsPerUnit;
+
+      ctx.fillStyle = piece.prototype.fillColor;
+      ctx.clearRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
+      ctx.fillRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
+
+      ctx.strokeStyle = piece.prototype.borderColor;
+      ctx.lineWidth = 2; // Border width
+      ctx.strokeRect(x + borderSize / 2, y + borderSize / 2, size - borderSize, size - borderSize);
+    });
+  }
+
   toBlueprint() {
     let newBp = new Blueprint();
     for (const piecePlaced of this.piecesPlaced) {
@@ -314,10 +389,10 @@ class Branch {
     return this.piecesPlaced.reduce((sum, piece) => sum + piece.prototype.score, 0);
   }
 
-  calculateOptimisticRemainingScore() {
+  calculateOptimisticRemainingScore(piecePrototypes) {
     let sum = 0;
     if (!this.grid.optimisticScorePerTile) {
-      this.grid.calculateOptimisticScorePerTile()
+      this.grid.calculateOptimisticScorePerTile(piecePrototypes)
     }
     this.grid.forEachOpenTile((x, y) => {
       sum += this.grid.optimisticScorePerTile[x][y];
@@ -326,8 +401,8 @@ class Branch {
     return sum;
   }
 
-  greedyAutoComplete() {
-    for (let prototype of allPiecePrototypes) {
+  greedyAutoComplete(piecePrototypes) {
+    for (let prototype of piecePrototypes) {
       this.grid.forEachOpenTile((x, y) => {
         if (this.grid.canPlacePiece(x, y, prototype)) {
           this.placePiece(x, y, prototype);
@@ -340,8 +415,12 @@ class Branch {
     return this.score + this.optimisticRemainingScore * weight;
   }
 
+  makeSmallChange(piecePrototypes) {
+
+  }
+
   clone() {
-    return new Branch(this.grid, this.piecesPlaced, this.optimisticScorePerTile);
+    return new Branch(this.grid, this.startingGrid, this.piecesPlaced);
   }
 }
 
@@ -354,22 +433,18 @@ console.assert(testSquare.isBisectedByRectangle(3, 3, 6, 6))
 
 //0eNqd1+1qgzAYBeB7eX/bYmK+9FbGGO0WhmBjqXabFO996mAM1oP2/Iw0T88bPGBucmyu8XypUy/VTerXNnVSPd2kq9/ToZmf9cM5SiV1H0+SSTqc5lXXtynuPg9NI2MmdXqLX1Kp8TmTmPq6r+OPsiyGl3Q9HeNl+sG9/Zmc227a0qb53yZmp3Kb53ubyTAvwt6OY/bP0lstU5a/VnnfKrZbYc0yTC4wo2VyActtt9ya5bdbfu28ApMLWCWTC8yo8u2YXQumFIOhZA+8+mYVK5hOeoAZBnMAs0yTUDLHVAlhnkmGxgxMMoRRDQCYzhkMnJlWTM8RphkMjVkw3UTJDNNNhFkmGRrTMckQ9kADitUxA4OhZCXTTQu+C3KmmwZgisFQMs10E2EFUyeEGSYZOjPLJEOYY+qExvRMnRAWmGRozJJJBjCTM91cxpzuAsudofpzxcjkI166ZZ8OyvhS+xC0Krwbx29KW+cQ
 //0eNqVmtFO3DAQRf/FzymKnTix91cqVEEbVZGWLGKXtgjtv3cBgSqVo+S8sYgc7jXjO2ac53C7f5zuH+blFHbPYf5+WI5h9/U5HOefy83+5Xunp/sp7MJ8mu5CE5abu5dPx9Nhmb78vtnvw7kJ8/Jj+hN28XzdhGk5zad5eqO8fnj6tjze3U4Plx/47Pkm3B+Ol0cOy8tvu2C+1JSGq9yEp8vX/VU+n5v/SGkzKa+Qus2kfoXUbyaVd1L6nJQ3k8YV0uBXHEijJ3Wfk4p3B6TqqwDcxdajQFSMvqIIlTyKDG6v824Ntb3Q0xoqe1W0VttLPa6p2l7r9R3VAqr4UCBU9agI6dn6LQiqUvQoUpV8xBCq8ygy2PtkIFT225lQg0fRWo3eIKGKTwYyWH0yAKprPQoMdtEbJNT2am/XDHY++gjVexQZzN4goTZXe1wL5G7UKUqiiu4SpKlqEmjqW+0ONPU+10mTj3Ui+VQnd712RySf6eRu0DlMJJ/o5K5od0SqOjnBXfZxTqSoSeAuJ+2OSJ1OTSL1mkTrlHVTIJI/pJO7zTUeV3I8F91ciFS1JnA3tFoTkaLuCPAP1pA0iYYSnU5f0tTrjkCkrEnkbtDuiDTq9CWSz3FaJz9zAdLoRy40mvKnctLkc5w0+XkLkXpNInf+RE4kn+NEGrUmWqeiNRHJ5ziNOn2OEylqErgrSbsj0uYajytJV3pNonXyOQ7j/OJn5xlIo+4IRPKzc3JXdUcATdXnOJH85BzcVX8/RKROdwRy53OcSFlrIneD1kQkn+PkrmgSaaq6I2S6Hmo1qidU1PmLKB/laLDT/QVRvUahwc2VHoc1VYNuMahq1ChUVXSTGQjlE51Q4jb0HTUSKuokRpQPdTToUx1V+dtQVOVvQxHlgx0N+mRHlD+iI6pqVbRWyWc7ovwpnQwmn+2I6jQKDfpsR1TWKYoGB90mEOWzHQ0WrQpR/ja00Hsgrc4rREW9cSqh/G0oovxtKBr0I3REZb1x0OCgtzOiRq0KDRatClFV70EyuP1C9ANFqrbfiH5s51fUdfP27uTun1ctm/Breji+PpRK7MeaxlLS5c8xnM9/AUMCEGw=
-const simulate = (importString) => {
-  const importedBp = new Blueprint(importString);
-  let starterGrid = new Grid(importedBp);
-  starterGrid.calculateOptimisticScorePerTile();
-  let startingBranch = new Branch(starterGrid, []);
+const someKindOfBacktrackingSearch = (startingBranch, piecePrototypes) => {
   //Create a greedy branch as a reference point
-  let greedyBranch = new Branch(starterGrid, []);
-  greedyBranch.greedyAutoComplete()
+  let greedyBranch = startingBranch.clone()
+  greedyBranch.greedyAutoComplete(piecePrototypes)
 
   console.log("Greedy branch:");
   console.log(greedyBranch.toString());
   console.log(greedyBranch.toBlueprint().encode());
   console.log("Score:", greedyBranch.getScore());
   console.log("Pieces placed:", greedyBranch.piecesPlaced.length);
-  displayBranch("canvas-left", startingBranch, starterGrid)
-  displayBranch("canvas-right", greedyBranch, starterGrid)
+  startingBranch.display("canvas-left")
+  greedyBranch.display("canvas-right")
 
   const startTime = Date.now();
   let maxScore = greedyBranch.getScore();
@@ -401,7 +476,7 @@ const simulate = (importString) => {
     }
 
     const { x, y } = nextSpace;
-    for (const prototype of allPiecePrototypes) {
+    for (const prototype of piecePrototypes) {
       if (branch.grid.canPlacePiece(x, y, prototype)) {
         let newBranch = branch.clone();
         newBranch.placePiece(x, y, prototype);
@@ -435,7 +510,7 @@ const simulate = (importString) => {
           continue;
         }*/
 
-        newBranch.calculateOptimisticRemainingScore();
+        newBranch.calculateOptimisticRemainingScore(piecePrototypes);
         const heuristicMaxScore = newBranch.score + newBranch.optimisticRemainingScore * 1;
         if (heuristicMaxScore >= maxScore) {
           branches.enq(newBranch, newBranch.getPriority(heuristicMult))
@@ -486,64 +561,70 @@ const simulate = (importString) => {
   console.log("Skipped by heuristics:", heuristicsSkipCount);
   console.log("Skipped by hashing:", hashingSkipCount);
 
-  displayBranch("canvas-left", startingBranch, starterGrid)
-  displayBranch("canvas-right", bestBranch, starterGrid)
+  startingBranch.display("canvas-left")
+  bestBranch.display("canvas-right")
 }
 
-function displayBranch(elemId, branch, baseGrid) {
-  const pixelsPerUnit = 20;
-  const borderSize = 2;
+async function simulatedAnnealing(startingBranch, initialTemperature, coolingRate, maxIterations) {
+  let currentBranch = startingBranch;
+  let currentScore = currentBranch.score;
+  let temperature = initialTemperature;
+  let iteration = 0;
+  let lastUpdateTime = Date.now();
 
-  const canvas = document.getElementById(elemId);
-  const ctx = canvas.getContext('2d');
+  while (temperature > 1 && iteration < maxIterations) {
+    let newBranch = currentBranch.clone();
+    newBranch.makeSmallChange();
+    let newScore = newBranch.score;
 
-  //Clear the canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.setTransform(1, 0, 0, 1, 0, 0)
+    if (newScore > currentScore || Math.random() < Math.exp((newScore - currentScore) / temperature)) {
+      currentBranch = newBranch;
+      currentScore = newScore;
+    }
 
-  // Scale the canvas
-  let maxX = baseGrid.width;
-  let maxY = baseGrid.height;
-  const logicalWidth = maxX * pixelsPerUnit;
-  const logicalHeight = maxY * pixelsPerUnit;
-  const scaleX = canvas.width / logicalWidth;
-  const scaleY = canvas.height / logicalHeight;
-  const scale = Math.min(scaleX, scaleY);
-  ctx.scale(scale, scale);
+    temperature *= coolingRate;
+    iteration++;
 
-  // Draw the 2D grid
-  ctx.lineWidth = 1 / scale; // Grid line width
-  ctx.strokeStyle = 'black'; // Grid line color
-
-  for (let i = 0; i < baseGrid.width; i++) {
-    for (let j = 0; j < baseGrid.height; j++) {
-      const x = i * pixelsPerUnit;
-      const y = j * pixelsPerUnit;
-
-      if (baseGrid.openSpaces[i][j]) {
-        ctx.strokeRect(x, y, pixelsPerUnit, pixelsPerUnit); // Draw the grid cell
-      }
+    // Check if a second has passed since the last update
+    let currentTime = Date.now();
+    if (currentTime - lastUpdateTime >= 1000) {
+      await new Promise(resolve => setTimeout(resolve, 0));
+      updateProgress(currentBranch, temperature, iteration);
+      lastUpdateTime = currentTime;
     }
   }
 
-  //Actually draw the thing
-  branch.piecesPlaced.forEach(piece => {
-    const size = piece.prototype.size * pixelsPerUnit;
-    const x = piece.x * pixelsPerUnit;
-    const y = piece.y * pixelsPerUnit;
+  return currentBranch;
+}
 
-    ctx.fillStyle = piece.prototype.fillColor;
-    ctx.clearRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
-    ctx.fillRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
+function updateProgress(currentBranch, temperature, iteration) {
+  console.log(`Iteration: ${iteration}, Temperature: ${temperature.toFixed(2)}`);
+}
 
-    ctx.strokeStyle = piece.prototype.borderColor;
-    ctx.lineWidth = 2; // Border width
-    ctx.strokeRect(x + borderSize / 2, y + borderSize / 2, size - borderSize, size - borderSize);
-  });
+function start(input) {
+  let allPiecePrototypes = [
+    new PiecePrototype(4, 1050, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
+    new PiecePrototype(3, 100, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
+    new PiecePrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)'),
+    new PiecePrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)')
+  ];
+  //Sort by their score per tile (higher is first)
+  allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
+
+  const importedBp = new Blueprint(input);
+  let starterGrid = new Grid(importedBp);
+  let startingBranch = new Branch(starterGrid, starterGrid, []);
+  //startingBranch.greedyAutoComplete(allPiecePrototypes)
+
+  someKindOfBacktrackingSearch(startingBranch, allPiecePrototypes);
+  //simulatedAnnealing(startingBranch, 100, 0.95, 10000)
 }
 
 document.getElementById('search-form').addEventListener('submit', function (event) {
   event.preventDefault();
   const input = document.getElementById('search-input').value;
-  simulate(input);
+
+  start(input)
+
+  //someKindOfBacktrackingSearch(input);
 });
