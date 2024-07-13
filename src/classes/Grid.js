@@ -126,6 +126,16 @@ class Grid {
     return result;
   }
 
+  forEachOpenSpaceForPiece(prototype, callback) {
+    this.forEachOpenTile((x, y) => {
+      if (this.canPlacePiece(x, y, prototype)) {
+        if (callback(x, y) === false) { // Stop iterating if callback returns false
+          return;
+        }
+      }
+    });
+  }
+
   calculateOptimisticScorePerTile(piecePrototypes) {
     this.optimisticScorePerTile = Array(this.width).fill().map(() => Array(this.height).fill(0));
     this.forEachOpenTile((x, y) => {

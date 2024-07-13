@@ -72,25 +72,6 @@ const someKindOfBacktrackingSearch = (startingBranch, allPiecePrototypes, higher
           evaluatedGrids.set(key, newBranch.score)
         }
 
-        /*let shouldSkip = false;
-  
-        branch.grid.forEachCoord((loopx, loopy, tile) => {
-          for (const otherPrototype of allPiecePrototypes) {
-            if (otherPrototype.size === 1) {
-              continue
-            }
-            if (branch.wouldThisPieceBeMoreOptimal(loopx, loopy, otherPrototype)) {
-              shouldSkip = true;
-              return false;
-            }
-          }
-        });
-  
-        if (shouldSkip) {
-          heuristicsSkipCount++;
-          continue;
-        }*/
-
         newBranch.calculateOptimisticRemainingScore(allPiecePrototypes);
         const heuristicMaxScore = newBranch.score + newBranch.optimisticRemainingScore * 1;
         if (heuristicMaxScore >= maxScore) {
@@ -197,7 +178,7 @@ function start(input) {
   const cutoffIndex = Math.floor(allPiecePrototypes.length / 2);
 
   // Split into higherPieces and lesserPieces
-  const higherPieces = allPiecePrototypes;
+  const higherPieces = allPiecePrototypes.slice(0, cutoffIndex);;
   const lesserPieces = allPiecePrototypes.slice(cutoffIndex);
 
   const importedBp = new Blueprint(input);
