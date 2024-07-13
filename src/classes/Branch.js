@@ -203,7 +203,7 @@ class Branch {
       this.grid.calculateOptimisticScorePerTile(piecePrototypes)
     }
     this.grid.forEachOpenTile((x, y) => {
-      sum += this.grid.optimisticScorePerTile[x, y];
+      sum += this.grid.optimisticScorePerTile[x][y];
     });
     this.optimisticRemainingScore = sum;
     return sum;
