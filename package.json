@@ -8,7 +8,7 @@
     "watchify": "^4.0.0"
   },
   "scripts": {
-    "watch": "watchify main.js -o public/bundle.js --debug --verbose",
-    "build": "browserify main.js -o public/bundle.js"
+    "watch": "watchify src/main.js -o public/bundle.js --debug --verbose",
+    "build": "browserify src/main.js -o public/bundle.js"
   }
 }
