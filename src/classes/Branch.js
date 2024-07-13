@@ -121,7 +121,7 @@ class Branch {
         if (intersectingPiece) {
           out += intersectingPiece.prototype.size.toString()
         }
-        else if (this.grid.openSpaces[curX][curY]) {
+        else if (this.grid.isSpaceOpen(curX, curY)) {
           out += "#";
         } else {
           out += "_";
@@ -162,7 +162,7 @@ class Branch {
         const x = i * pixelsPerUnit;
         const y = j * pixelsPerUnit;
 
-        if (this.startingGrid.openSpaces[i][j]) {
+        if (this.startingGrid.isSpaceOpen(i, j)) {
           ctx.strokeRect(x, y, pixelsPerUnit, pixelsPerUnit); // Draw the grid cell
         }
       }

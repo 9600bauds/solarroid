@@ -69,7 +69,7 @@ class Grid {
   forEachOpenTile(callback) {
     for (let x = 0; x < this.width; x++) {
       for (let y = 0; y < this.height; y++) {
-        if (this.openSpaces[x][y]) {
+        if (this.isSpaceOpen(x, y)) {
           if (callback(x, y) === false) { // Stop iterating if callback returns false
             return;
           }
@@ -95,16 +95,35 @@ class Grid {
     return this.isInBounds(x1, y1) && this.isInBounds(x2, y2);
   }
 
-  canPlacePiece(x, y, prototype) {
-    const size = prototype.size;
-    for (let i = 0; i < size; i++) {
-      for (let j = 0; j < size; j++) {
-        if (x + i >= this.width || y + j >= this.height || !this.openSpaces[x + i][y + j]) {
+  isSpaceOpen(x, y) {
+    return this.openSpaces[x][y]
+  }
+
+  isRectOpen(x1, y1, x2, y2) {
+    for (let x = x1; x <= x2; x++) {
+      for (let y = y1; y <= y2; y++) {
+        if (!this.isInBounds(x, y) || !this.isSpaceOpen(x, y)) {
           return false;
         }
       }
     }
-    return true;
+    return true
+  }
+
+  canPlacePiece(x, y, prototype) {
+    const size = prototype.size;
+    return this.isRectOpen(x, y, x + size - 1, y + size - 1);
+  }
+
+  findFirstOpenSpaceForPiece(prototype) {
+    let result = null;
+    this.forEachOpenTile((x, y) => {
+      if (this.canPlacePiece(x, y, prototype)) {
+        result = { x, y };
+        return false; // Stop iterating immediately
+      }
+    });
+    return result;
   }
 
   calculateOptimisticScorePerTile(piecePrototypes) {
