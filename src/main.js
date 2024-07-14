@@ -5,9 +5,50 @@ const Grid = require('./classes/Grid');
 const Branch = require('./classes/Branch');
 const { isValidSpaceEntity } = require('./util');
 
-window.Blueprint = Blueprint; // This makes it accessible globally if needed. Not sure if needed
+Blueprint.setEntityData({
+  "se_space_solar_panel":
+  {
+    type: 'item',
+    width: 4,
+    height: 4
+  },
+  "se_space_solar_panel_2":
+  {
+    type: 'item',
+    width: 4,
+    height: 4
+  },
+  "se_space_solar_panel_3":
+  {
+    type: 'item',
+    width: 4,
+    height: 4
+  },
+  "se_space_accumulator":
+  {
+    type: 'item',
+    width: 2,
+    height: 2
+  },
+  "se_space_accumulator_2":
+  {
+    type: 'item',
+    width: 2,
+    height: 2
+  },
+  "se_pylon_substation":
+  {
+    type: 'item',
+    width: 2,
+    height: 2,
+    maxElectricReach: 64
+  }
+});
 
-let testSquare = new PlacedPiece(0, 0, new PiecePrototype(4, 4, "test-4x4"))
+window.Blueprint = Blueprint; // This makes it accessible globally
+
+
+let testSquare = new PlacedPiece(0, 0, new PiecePrototype(4, 4, "test_4x4"))
 console.assert(testSquare.intersectsRectangle(2, 2, 5, 5))
 let testSubStation = new PlacedPiece(12, 0, new PiecePrototype(2, 10, "substation", "", "", 18, 18))
 console.assert(!testSquare.isSuppliedBy(testSubStation))
@@ -71,10 +112,10 @@ function updateProgress(startingBranch, currentBranch, temperature, iteration) {
 
 function start(input) {
   let allPiecePrototypes = [
-    new PiecePrototype(4, 1050, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
-    new PiecePrototype(3, 100, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
+    new PiecePrototype(4, 1050, "se_space_solar_panel", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
+    new PiecePrototype(3, 100, "solar_panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
     new PiecePrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)', 18, 18),
-    new PiecePrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)', 9, 7)
+    new PiecePrototype(1, 1, "medium_electric_pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)', 9, 7)
   ];
   //Sort by their score per tile (higher is first)
   allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);

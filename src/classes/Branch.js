@@ -102,7 +102,7 @@ class Branch {
     ctx.scale(scale, scale);
 
     // Draw the 2D grid
-    ctx.lineWidth = 1 / scale; // Grid line width
+    /*ctx.lineWidth = 1 / scale; // Grid line width
     ctx.strokeStyle = 'black'; // Grid line color
 
     for (let i = 0; i < this.startingGrid.width; i++) {
@@ -114,7 +114,7 @@ class Branch {
           ctx.strokeRect(x, y, pixelsPerUnit, pixelsPerUnit); // Draw the grid cell
         }
       }
-    }
+    }*/
 
     //Actually draw the thing
     this.piecesPlaced.forEach(piece => {
