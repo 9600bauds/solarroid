@@ -1,7 +1,6 @@
 {
   "dependencies": {
-    "factorio-blueprint": "^2.6.5",
-    "priorityqueuejs": "^2.0.0"
+    "factorio-blueprint": "^2.6.5"
   },
   "devDependencies": {
     "browserify": "^17.0.0",

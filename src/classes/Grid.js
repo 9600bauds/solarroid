@@ -52,10 +52,6 @@ class Grid {
     }
   }
 
-  getKey() {
-    return this.openSpaces.map(row => row.map(cell => cell ? '1' : '0').join('')).join('');
-  }
-
   forEachOpenTile(callback, startX = 0, startY = 0) {
     let count = 0;
     const totalCells = this.width * this.height;
@@ -72,15 +68,6 @@ class Grid {
 
       count++;
     }
-  }
-
-  findNextOpenSpace() {
-    let result = null;
-    this.forEachOpenTile((x, y) => {
-      result = { x, y };
-      return false; // Stop iterating immediately
-    });
-    return result;
   }
 
   isInBounds(x, y) {
@@ -109,45 +96,6 @@ class Grid {
   canPlacePiece(x, y, prototype) {
     const size = prototype.size;
     return this.isRectOpen(x, y, x + size - 1, y + size - 1);
-  }
-
-  findFirstOpenSpaceForPiece(prototype) {
-    let result = null;
-    this.forEachOpenTile((x, y) => {
-      if (this.canPlacePiece(x, y, prototype)) {
-        result = { x, y };
-        return false; // Stop iterating immediately
-      }
-    });
-    return result;
-  }
-
-  forEachOpenSpaceForPiece(prototype, startX, startY, callback) {
-    this.forEachOpenTile((x, y) => {
-      if (this.canPlacePiece(x, y, prototype)) {
-        if (callback(x, y) === false) { // Stop iterating if callback returns false
-          return;
-        }
-      }
-    }, startX, startY);
-  }
-
-  calculateOptimisticScorePerTile(piecePrototypes) {
-    this.optimisticScorePerTile = Array(this.width).fill().map(() => Array(this.height).fill(0));
-    this.forEachOpenTile((x, y) => {
-      for (const prototype of piecePrototypes) {
-        if (this.canPlacePiece(x, y, prototype)) {
-          //Mark every tile that that piece could theoretically optimistically occupy with its score per tile
-          for (let i = 0; i < prototype.size; i++) {
-            for (let j = 0; j < prototype.size; j++) {
-              const oldVal = this.optimisticScorePerTile[x + i][y + j];
-              const newVal = prototype.scorePerTile;
-              this.optimisticScorePerTile[x + i][y + j] = Math.max(oldVal, newVal)
-            }
-          }
-        }
-      }
-    });
   }
 }
 

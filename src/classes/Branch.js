@@ -6,40 +6,6 @@ class Branch {
     this.grid = new Grid(grid);
     this.startingGrid = startingGrid;
     this.piecesPlaced = piecesPlaced.slice(); // Shallow copy
-    this.score = this.getScore()
-  }
-
-  wouldThisPieceBeMoreOptimal(x, y, prototype) {
-    const size = prototype.size;
-
-    let x2 = x + size;
-    let y2 = y + size;
-    let thisArea = 0;
-    let thisScore = 0;
-    let thesePieces = [];
-    for (const piece of this.piecesPlaced) {
-      if (!piece.intersectsRectangle(x, y, x2, y2)) {
-        continue
-      }
-      if (!piece.isFullyContainedByRectangle(x, y, x2, y2)) {
-        return false; //We are bisecting a piece!
-      }
-      else {
-        thesePieces.push(piece)
-        thisScore += piece.prototype.score;
-        thisArea += piece.prototype.area;
-      }
-    }
-    if (thisArea < prototype.area) {
-      return false; //This area was not 100% full of pieces
-    }
-    if (prototype.score > thisScore) {
-      //this.placePiece(x, y, prototype)
-      //console.log(this.toString(), this, x, y, prototype.name, "would be better")
-      //debugger
-      return true;
-    }
-    return false;
   }
 
   placePiece(x, y, prototype) {
@@ -51,7 +17,6 @@ class Branch {
     }
     let newPlacedPiece = new PlacedPiece(x, y, prototype);
     this.piecesPlaced.push(newPlacedPiece);
-    this.score += prototype.score;
   }
 
   removePiece(placedPiece) {
@@ -68,7 +33,6 @@ class Branch {
     this.piecesPlaced = this.piecesPlaced.filter(
       piece => piece !== placedPiece
     );
-    this.score -= placedPiece.prototype.score;
   }
 
   removePiecesInRect(x1, y1, x2, y2) {
@@ -193,20 +157,10 @@ class Branch {
     return newBp;
   }
 
-  getScore() {
-    return this.piecesPlaced.reduce((sum, piece) => sum + piece.prototype.score, 0);
-  }
-
-  calculateOptimisticRemainingScore(piecePrototypes) {
-    let sum = 0;
-    if (!this.grid.optimisticScorePerTile) {
-      this.grid.calculateOptimisticScorePerTile(piecePrototypes)
-    }
-    this.grid.forEachOpenTile((x, y) => {
-      sum += this.grid.optimisticScorePerTile[x][y];
-    });
-    this.optimisticRemainingScore = sum;
-    return sum;
+  updateScore() {
+    let baseScore = this.piecesPlaced.reduce((sum, piece) => sum + piece.prototype.score, 0);
+    this.score = baseScore;
+    return this.score
   }
 
   greedyAutoComplete(piecePrototypes) {
@@ -217,10 +171,6 @@ class Branch {
         }
       });
     }
-  }
-
-  getPriority(weight = 0.5) {
-    return this.score + this.optimisticRemainingScore * weight;
   }
 
   makeSmallChange(allPiecePrototypes) {
