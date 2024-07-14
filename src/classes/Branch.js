@@ -142,7 +142,26 @@ class Branch {
   }
 
   updateScore() {
-    this.score = Array.from(this.piecesPlaced).reduce((sum, piece) => sum + piece.prototype.score, 0);
+    let baseScore = Array.from(this.piecesPlaced).reduce((sum, piece) => sum + piece.prototype.score, 0);
+    for (const producingPiece of this.piecesPlaced) {
+      if (producingPiece.prototype.supplyAreaRange) {
+        continue
+      }
+      let isSupplied = false;
+      for (const otherPiece of this.piecesPlaced) {
+        if (!otherPiece.prototype.supplyAreaRange) {
+          continue
+        }
+        if (producingPiece.isSuppliedBy(otherPiece)) {
+          isSupplied = true;
+          break;
+        }
+      }
+      if (!isSupplied) {
+        baseScore -= producingPiece.prototype.score;
+      }
+    }
+    this.score = baseScore;
     return this.score;
   }
 

@@ -7,8 +7,12 @@ const { isValidSpaceEntity } = require('./util');
 
 window.Blueprint = Blueprint; // This makes it accessible globally if needed. Not sure if needed
 
-const testSquare = new PlacedPiece(1, 1, new PiecePrototype(4, 4, "test-4x4"))
+let testSquare = new PlacedPiece(0, 0, new PiecePrototype(4, 4, "test-4x4"))
 console.assert(testSquare.intersectsRectangle(2, 2, 5, 5))
+let testSubStation = new PlacedPiece(12, 0, new PiecePrototype(2, 10, "substation", "", "", 18, 18))
+console.assert(!testSquare.isSuppliedBy(testSubStation))
+testSubStation = new PlacedPiece(8, 10, new PiecePrototype(2, 10, "substation", "", "", 18, 18))
+console.assert(testSquare.isSuppliedBy(testSubStation))
 
 async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate, maxIterations) {
   let currentBranch = startingBranch;
@@ -49,6 +53,7 @@ async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTem
   console.log(currentBranch.toString());
   console.log(currentBranch.toBlueprint().encode());
   console.log("Score:", currentBranch.score, '(', (currentBranch.score - startingBranch.score), ') from starter branch');
+  console.log(startingBranch.toBlueprint().encode());
   console.log("Pieces placed:", currentBranch.piecesPlaced.length);
   console.log("Branches Evaluated:", iteration);
 
@@ -68,8 +73,8 @@ function start(input) {
   let allPiecePrototypes = [
     new PiecePrototype(4, 1050, "roboport", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
     new PiecePrototype(3, 100, "solar-panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
-    new PiecePrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)'),
-    new PiecePrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)')
+    new PiecePrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)', 18, 18),
+    new PiecePrototype(1, 1, "medium-electric-pole", 'rgba(139, 69, 19, 0.5)', 'rgba(139, 69, 19, 1)', 9, 7)
   ];
   //Sort by their score per tile (higher is first)
   allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);

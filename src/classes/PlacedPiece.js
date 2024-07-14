@@ -3,6 +3,8 @@ class PlacedPiece {
     this.x = x;
     this.y = y;
     this.prototype = prototype;
+    this.centerX = this.x + this.prototype.size / 2;
+    this.centerY = this.y + this.prototype.size / 2;
   }
 
   toString() {
@@ -21,14 +23,13 @@ class PlacedPiece {
       this.y + size <= y1 || this.y >= y2);
   }
 
-  getCorners() {
-    const size = this.prototype.size;
-    return [
-      { x: this.x, y: this.y },
-      { x: this.x + size, y: this.y },
-      { x: this.x, y: this.y + size },
-      { x: this.x + size, y: this.y + size }
-    ];
+  isSuppliedBy(otherPiece) {
+    let otherRange = otherPiece.prototype.supplyAreaRange / 2;
+    let x1 = otherPiece.centerX - otherRange;
+    let y1 = otherPiece.centerY - otherRange;
+    let x2 = otherPiece.centerX + otherRange;
+    let y2 = otherPiece.centerY + otherRange;
+    return this.intersectsRectangle(x1, y1, x2, y2)
   }
 }
 
