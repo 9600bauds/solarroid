@@ -5,7 +5,7 @@ class Branch {
   constructor(grid, startingGrid, piecesPlaced) {
     this.grid = new Grid(grid);
     this.startingGrid = startingGrid;
-    this.piecesPlaced = piecesPlaced.slice(); // Shallow copy
+    this.piecesPlaced = new Set(piecesPlaced);
   }
 
   placePiece(x, y, prototype) {
@@ -16,7 +16,7 @@ class Branch {
       }
     }
     let newPlacedPiece = new PlacedPiece(x, y, prototype);
-    this.piecesPlaced.push(newPlacedPiece);
+    this.piecesPlaced.add(newPlacedPiece);
   }
 
   removePiece(placedPiece) {
@@ -28,38 +28,22 @@ class Branch {
         this.grid.openSpaces[x + i][y + j] = true; // Mark the grid as open
       }
     }
-    // Remove the piece from piecesPlaced
-    // Yes this is how you have to do it in javascript because javascript is just like that
-    this.piecesPlaced = this.piecesPlaced.filter(
-      piece => piece !== placedPiece
-    );
+    this.piecesPlaced.delete(placedPiece);
   }
 
   removePiecesInRect(x1, y1, x2, y2) {
-    const piecesToRemove = []; //intermediary because we can't iterate through the array while modifying it
-
     for (const piece of this.piecesPlaced) {
       if (piece.intersectsRectangle(x1, y1, x2, y2)) {
-        piecesToRemove.push(piece);
+        this.removePiece(piece);
       }
-    }
-
-    for (const piece of piecesToRemove) {
-      this.removePiece(piece);
     }
   }
 
   removePiecesSmallerThan(size) {
-    const piecesToRemove = []; //intermediary because we can't iterate through the array while modifying it
-
     for (const piece of this.piecesPlaced) {
       if (piece.prototype.size < size) {
-        piecesToRemove.push(piece);
+        this.removePiece(piece);
       }
-    }
-
-    for (const piece of piecesToRemove) {
-      this.removePiece(piece);
     }
   }
 
@@ -158,9 +142,8 @@ class Branch {
   }
 
   updateScore() {
-    let baseScore = this.piecesPlaced.reduce((sum, piece) => sum + piece.prototype.score, 0);
-    this.score = baseScore;
-    return this.score
+    this.score = Array.from(this.piecesPlaced).reduce((sum, piece) => sum + piece.prototype.score, 0);
+    return this.score;
   }
 
   greedyAutoComplete(piecePrototypes) {
@@ -177,8 +160,8 @@ class Branch {
     // Remove all pieces smaller than size 3
     this.removePiecesSmallerThan(3);
 
-    const randomIndex = Math.floor(Math.random() * this.piecesPlaced.length);
-    const pieceToMove = this.piecesPlaced[randomIndex];
+    // Pick a random piece to move
+    const pieceToMove = Array.from(this.piecesPlaced)[Math.floor(Math.random() * this.piecesPlaced.size)];
 
     // Randomly choose a new position
     const maxDeviation = 2;

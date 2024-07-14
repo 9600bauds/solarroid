@@ -76,7 +76,7 @@ function start(input) {
 
   const importedBp = new Blueprint(input);
   let starterGrid = new Grid(importedBp);
-  let startingBranch = new Branch(starterGrid, starterGrid, []);
+  let startingBranch = new Branch(starterGrid, starterGrid, new Set());
   startingBranch.greedyAutoComplete(allPiecePrototypes)
   startingBranch.updateScore()
 
