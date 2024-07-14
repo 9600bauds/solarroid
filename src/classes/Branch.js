@@ -223,8 +223,27 @@ class Branch {
     return this.score + this.optimisticRemainingScore * weight;
   }
 
-  makeSmallChange(piecePrototypes) {
+  makeSmallChange(allPiecePrototypes) {
+    // Remove all pieces smaller than size 3
+    this.removePiecesSmallerThan(3);
 
+    const randomIndex = Math.floor(Math.random() * this.piecesPlaced.length);
+    const pieceToMove = this.piecesPlaced[randomIndex];
+
+    // Randomly choose a new position
+    const maxDeviation = 2;
+    const newX = pieceToMove.x + Math.floor(Math.random() * (2 * maxDeviation + 1)) - maxDeviation;
+    const newY = pieceToMove.y + Math.floor(Math.random() * (2 * maxDeviation + 1)) - maxDeviation;
+    // Remove all pieces that would intersect the new position
+    const size = pieceToMove.prototype.size;
+    this.removePiecesInRect(newX, newY, newX + size, newY + size);
+
+    // Place the piece in the new location if possible
+    if (this.grid.canPlacePiece(newX, newY, pieceToMove.prototype)) {
+      this.placePiece(newX, newY, pieceToMove.prototype);
+    }
+
+    this.greedyAutoComplete(allPiecePrototypes);
   }
 
   clone() {

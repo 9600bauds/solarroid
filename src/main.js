@@ -128,20 +128,23 @@ const someKindOfBacktrackingSearch = (startingBranch, allPiecePrototypes, higher
   bestBranch.display("canvas-right")
 }
 
-async function simulatedAnnealing(startingBranch, initialTemperature, coolingRate, maxIterations) {
+async function simulatedAnnealing(startingBranch, allPiecePrototypes, higherPieces, lesserPieces, initialTemperature, coolingRate, maxIterations) {
   let currentBranch = startingBranch;
-  currentBranch.greedyAutoComplete()
+  currentBranch.greedyAutoComplete(allPiecePrototypes)
   let currentScore = currentBranch.score;
   let temperature = initialTemperature;
   let iteration = 0;
-  let lastUpdateTime = Date.now();
+  let startTime = Date.now();
+  let lastUpdateTime = startTime;
 
   while (temperature > 1 && iteration < maxIterations) {
     let newBranch = currentBranch.clone();
-    newBranch.makeSmallChange();
+    newBranch.makeSmallChange(allPiecePrototypes);
     let newScore = newBranch.score;
 
-    if (newScore > currentScore || Math.random() < Math.exp((newScore - currentScore) / temperature)) {
+    let isNewScoreBetter = newScore > currentScore;
+    let randomChance = Math.random() < Math.exp((newScore - currentScore) / temperature)
+    if (isNewScoreBetter || randomChance) {
       currentBranch = newBranch;
       currentScore = newScore;
     }
@@ -151,17 +154,30 @@ async function simulatedAnnealing(startingBranch, initialTemperature, coolingRat
 
     // Check if a second has passed since the last update
     let currentTime = Date.now();
-    if (currentTime - lastUpdateTime >= 1000) {
+    if (currentTime - lastUpdateTime >= 100) {
       await new Promise(resolve => setTimeout(resolve, 0));
-      updateProgress(currentBranch, temperature, iteration);
+      updateProgress(startingBranch, currentBranch, temperature, iteration);
       lastUpdateTime = currentTime;
     }
   }
 
+  const endTime = Date.now();
+  console.log(`Finished annealing in in ${(endTime - startTime) / 1000} seconds:`);
+  console.log(currentBranch.toString());
+  console.log(currentBranch.toBlueprint().encode());
+  console.log("Score:", currentBranch.score, '(', (currentBranch.score - startingBranch.score), ') from starter branch');
+  console.log("Pieces placed:", currentBranch.piecesPlaced.length);
+  console.log("Branches Evaluated:", iteration);
+
+  startingBranch.display("canvas-left")
+  currentBranch.display("canvas-right")
+
   return currentBranch;
 }
 
-function updateProgress(currentBranch, temperature, iteration) {
+function updateProgress(startingBranch, currentBranch, temperature, iteration) {
+  startingBranch.display("canvas-left")
+  currentBranch.display("canvas-right")
   console.log(`Iteration: ${iteration}, Temperature: ${temperature.toFixed(2)}`);
 }
 
@@ -185,8 +201,8 @@ function start(input) {
   let starterGrid = new Grid(importedBp);
   let startingBranch = new Branch(starterGrid, starterGrid, []);
 
-  someKindOfBacktrackingSearch(startingBranch, allPiecePrototypes, higherPieces, lesserPieces);
-  //simulatedAnnealing(startingBranch, allPiecePrototypes, higherPieces, lesserPieces, 100, 0.95, 10000)
+  //someKindOfBacktrackingSearch(startingBranch, allPiecePrototypes, higherPieces, lesserPieces);
+  simulatedAnnealing(startingBranch, allPiecePrototypes, higherPieces, lesserPieces, 100000, 0.9995, 100000)
 }
 
 document.getElementById('search-form').addEventListener('submit', function (event) {
@@ -194,6 +210,4 @@ document.getElementById('search-form').addEventListener('submit', function (even
   const input = document.getElementById('search-input').value;
 
   start(input)
-
-  //someKindOfBacktrackingSearch(input);
 });

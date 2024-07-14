@@ -56,25 +56,21 @@ class Grid {
     return this.openSpaces.map(row => row.map(cell => cell ? '1' : '0').join('')).join('');
   }
 
-  forEachCoord(callback) {
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        if (callback(x, y, this.openSpaces[x][y]) === false) { // Stop iterating if callback returns false
+  forEachOpenTile(callback, startX = 0, startY = 0) {
+    let count = 0;
+    const totalCells = this.width * this.height;
+
+    while (count < totalCells) {
+      const x = (startX + Math.floor(count / this.height)) % this.width;
+      const y = (startY + count) % this.height;
+
+      if (this.isSpaceOpen(x, y)) {
+        if (callback(x, y) === false) {
           return;
         }
       }
-    }
-  }
 
-  forEachOpenTile(callback) {
-    for (let x = 0; x < this.width; x++) {
-      for (let y = 0; y < this.height; y++) {
-        if (this.isSpaceOpen(x, y)) {
-          if (callback(x, y) === false) { // Stop iterating if callback returns false
-            return;
-          }
-        }
-      }
+      count++;
     }
   }
 
@@ -126,14 +122,14 @@ class Grid {
     return result;
   }
 
-  forEachOpenSpaceForPiece(prototype, callback) {
+  forEachOpenSpaceForPiece(prototype, startX, startY, callback) {
     this.forEachOpenTile((x, y) => {
       if (this.canPlacePiece(x, y, prototype)) {
         if (callback(x, y) === false) { // Stop iterating if callback returns false
           return;
         }
       }
-    });
+    }, startX, startY);
   }
 
   calculateOptimisticScorePerTile(piecePrototypes) {
