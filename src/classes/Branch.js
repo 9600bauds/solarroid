@@ -117,12 +117,14 @@ class Branch {
     }*/
 
     //Actually draw the thing
+    const piecesArray = Array.from(this.piecesPlaced);
+    const powerPoleSet = new Set(piecesArray.filter(piece => piece.prototype.isPowerPole()));
     this.piecesPlaced.forEach(piece => {
       const size = piece.prototype.size * pixelsPerUnit;
       const x = piece.x * pixelsPerUnit;
       const y = piece.y * pixelsPerUnit;
 
-      let isSupplied = this.isPieceSupplied(piece);
+      let isSupplied = this.isPieceSupplied(piece, powerPoleSet);
 
       ctx.fillStyle = isSupplied ? piece.prototype.fillColor : "rgba(0, 0, 0, 0.5)";
       ctx.clearRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
@@ -144,25 +146,56 @@ class Branch {
   }
 
   updateScore() {
-    let baseScore = Array.from(this.piecesPlaced).reduce((sum, piece) => sum + piece.prototype.score, 0);
+    const piecesArray = Array.from(this.piecesPlaced);
+
+    let baseScore = piecesArray.reduce((sum, piece) => sum + piece.prototype.score, 0);
+
+    const powerPoleSet = new Set(piecesArray.filter(piece => piece.prototype.isPowerPole()));
     for (const piece of this.piecesPlaced) {
-      if (!this.isPieceSupplied(piece)) {
+      if (!this.isPieceSupplied(piece, powerPoleSet)) {
         baseScore -= piece.prototype.score;
       }
     }
+
+    /*let starterPole = null;
+    for (const piece of powerPoleSet) {
+      starterPole = piece;
+      break;
+    }
+    if (starterPole) {
+      let electricNetwork = new Set();
+      const recursiveElectricNetworkFind = (piece, electricNetwork, powerPoleSet) => {
+        for (const thisPole of powerPoleSet) {
+          if (!electricNetwork.has(thisPole) && piece.connectsTo(thisPole)) {
+            electricNetwork.add(thisPole);
+            recursiveElectricNetworkFind(thisPole, electricNetwork, powerPoleSet);
+          }
+        }
+      };
+
+      electricNetwork.add(starterPole);
+      recursiveElectricNetworkFind(starterPole, electricNetwork, powerPoleSet);
+
+      for (const piece of this.piecesPlaced) {
+        if (piece.prototype.isPowerPole() && !electricNetwork.has(piece)) {
+          baseScore /= 2;
+          console.log(this.toBlueprint().encode())
+          debugger
+        }
+      }
+
+    }*/
+
     this.score = baseScore;
     return this.score;
   }
 
-  isPieceSupplied(piece) {
+  isPieceSupplied(piece, powerPoleSet) {
     if (piece.prototype.isPowerPole()) {
       return true
     }
     let isSupplied = false;
-    for (const otherPiece of this.piecesPlaced) {
-      if (!otherPiece.prototype.isPowerPole()) {
-        continue
-      }
+    for (const otherPiece of powerPoleSet) {
       if (piece.isSuppliedBy(otherPiece)) {
         isSupplied = true;
         break;

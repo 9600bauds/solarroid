@@ -23,6 +23,12 @@ class PlacedPiece {
       this.y + size <= y1 || this.y >= y2);
   }
 
+  distanceTo(piece2) {
+    const dx = this.centerX - piece2.centerX;
+    const dy = this.centerY - piece2.centerY;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
   isSuppliedBy(otherPiece) {
     let otherRange = otherPiece.prototype.supplyAreaRange / 2;
     let x1 = otherPiece.centerX - otherRange;
@@ -30,6 +36,11 @@ class PlacedPiece {
     let x2 = otherPiece.centerX + otherRange;
     let y2 = otherPiece.centerY + otherRange;
     return this.intersectsRectangle(x1, y1, x2, y2)
+  }
+
+  connectsTo(otherPiece) {
+    let range = Math.min(this.prototype.connectRange, otherPiece.prototype.connectRange);
+    return this.distanceTo(otherPiece) <= range;
   }
 }
 
