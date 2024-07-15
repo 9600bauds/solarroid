@@ -122,7 +122,9 @@ class Branch {
       const x = piece.x * pixelsPerUnit;
       const y = piece.y * pixelsPerUnit;
 
-      ctx.fillStyle = piece.prototype.fillColor;
+      let isSupplied = this.isPieceSupplied(piece);
+
+      ctx.fillStyle = isSupplied ? piece.prototype.fillColor : "rgba(0, 0, 0, 0.5)";
       ctx.clearRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
       ctx.fillRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
 
@@ -143,26 +145,30 @@ class Branch {
 
   updateScore() {
     let baseScore = Array.from(this.piecesPlaced).reduce((sum, piece) => sum + piece.prototype.score, 0);
-    for (const producingPiece of this.piecesPlaced) {
-      if (producingPiece.prototype.supplyAreaRange) {
-        continue
-      }
-      let isSupplied = false;
-      for (const otherPiece of this.piecesPlaced) {
-        if (!otherPiece.prototype.supplyAreaRange) {
-          continue
-        }
-        if (producingPiece.isSuppliedBy(otherPiece)) {
-          isSupplied = true;
-          break;
-        }
-      }
-      if (!isSupplied) {
-        baseScore -= producingPiece.prototype.score;
+    for (const piece of this.piecesPlaced) {
+      if (!this.isPieceSupplied(piece)) {
+        baseScore -= piece.prototype.score;
       }
     }
     this.score = baseScore;
     return this.score;
+  }
+
+  isPieceSupplied(piece) {
+    if (piece.prototype.isPowerPole()) {
+      return true
+    }
+    let isSupplied = false;
+    for (const otherPiece of this.piecesPlaced) {
+      if (!otherPiece.prototype.isPowerPole()) {
+        continue
+      }
+      if (piece.isSuppliedBy(otherPiece)) {
+        isSupplied = true;
+        break;
+      }
+    }
+    return isSupplied;
   }
 
   greedyAutoComplete(piecePrototypes) {

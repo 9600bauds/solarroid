@@ -11,6 +11,10 @@ class PiecePrototype {
     this.borderColor = borderColor;
   }
 
+  isPowerPole() {
+    return this.supplyAreaRange && this.connectRange
+  }
+
   toString() {
     return `${this.name}, pertile ${this.scorePerTile.toFixed(2)}`;
   }

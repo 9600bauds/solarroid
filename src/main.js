@@ -94,7 +94,6 @@ async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTem
   console.log(currentBranch.toString());
   console.log(currentBranch.toBlueprint().encode());
   console.log("Score:", currentBranch.score, '(', (currentBranch.score - startingBranch.score), ') from starter branch');
-  console.log(startingBranch.toBlueprint().encode());
   console.log("Pieces placed:", currentBranch.piecesPlaced.length);
   console.log("Branches Evaluated:", iteration);
 
