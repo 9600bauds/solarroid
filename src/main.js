@@ -1,52 +1,14 @@
-const Blueprint = require('factorio-blueprint');
+const { presets, selectPreset } = require('./presets');
+
 const PiecePrototype = require('./classes/PiecePrototype');
 const PlacedPiece = require('./classes/PlacedPiece');
 const Grid = require('./classes/Grid');
 const Branch = require('./classes/Branch');
 
-Blueprint.setEntityData({
-  "se_space_solar_panel":
-  {
-    type: 'item',
-    width: 4,
-    height: 4
-  },
-  "se_space_solar_panel_2":
-  {
-    type: 'item',
-    width: 4,
-    height: 4
-  },
-  "se_space_solar_panel_3":
-  {
-    type: 'item',
-    width: 4,
-    height: 4
-  },
-  "se_space_accumulator":
-  {
-    type: 'item',
-    width: 2,
-    height: 2
-  },
-  "se_space_accumulator_2":
-  {
-    type: 'item',
-    width: 2,
-    height: 2
-  },
-  "se_pylon_substation":
-  {
-    type: 'item',
-    width: 2,
-    height: 2,
-    maxElectricReach: 64
-  }
-});
-
+const Blueprint = require('./blueprintData');
 window.Blueprint = Blueprint; // This makes it accessible globally
 
-
+// Extremely lazy testing
 let testSquare = new PlacedPiece(0, 0, new PiecePrototype(4, 4, "test_4x4"))
 console.assert(testSquare.intersectsRectangle(2, 2, 5, 5))
 let testSubStation = new PlacedPiece(12, 0, new PiecePrototype(2, 10, "substation", "", "", 18, 18))
@@ -131,6 +93,15 @@ function start(blueprintInputText) {
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('blueprint-input').addEventListener('input', function (event) {
     start(event.target.value);
+  });
+  document.getElementById('preset1').addEventListener('click', function () {
+    selectPreset(0);
+  });
+  document.getElementById('preset2').addEventListener('click', function () {
+    selectPreset(1);
+  });
+  document.getElementById('preset3').addEventListener('click', function () {
+    selectPreset(2);
   });
 });
 
