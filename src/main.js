@@ -87,13 +87,17 @@ function start(blueprintInputText) {
   startingBranch.greedyAutoComplete(allPiecePrototypes)
   startingBranch.updateScore()
 
-  simulatedAnnealing(startingBranch, allPiecePrototypes, 100000, 0.9995, 100000)
+  let initialTemperature = document.getElementById('initialTemperature').value;
+  let coolingRate = document.getElementById('coolingRate').value;
+  let maxIterations = document.getElementById('maxIterations').value;
+  simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate, maxIterations)
 }
 
 document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('blueprint-input').addEventListener('input', function (event) {
     start(event.target.value);
   });
+
   document.getElementById('preset1').addEventListener('click', function () {
     selectPreset(0);
   });
