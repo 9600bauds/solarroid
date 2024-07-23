@@ -1,7 +1,5 @@
-const isValidSpaceEntity = require('../util').isValidSpaceEntity;
-
 class Grid {
-  constructor(arg) {
+  constructor(arg, baseTile) {
     if (arg instanceof Grid) {
       let otherGrid = arg;
       this.openSpaces = otherGrid.openSpaces.map(row => [...row]); // Deep copy
@@ -15,9 +13,11 @@ class Grid {
       let minY = Number.MAX_SAFE_INTEGER;
       let maxX = Number.MIN_SAFE_INTEGER;
       let maxY = Number.MIN_SAFE_INTEGER;
+      const patternString = baseTile.replace(/[_-]/g, '[-_]');
+      const pattern = new RegExp(`^${patternString}$`);
       for (const pos in bp.entityPositionGrid) {
         const entity = bp.entityPositionGrid[pos]
-        if (!isValidSpaceEntity(entity)) {
+        if (!pattern.test(entity.name)) {
           continue
         }
         //console.log("Entity", entity.name, "is valid at", pos)
@@ -35,7 +35,7 @@ class Grid {
       //Second pass: Populate the grid
       for (const pos in bp.entityPositionGrid) {
         const entity = bp.entityPositionGrid[pos]
-        if (!isValidSpaceEntity(entity)) {
+        if (!pattern.test(entity.name)) {
           continue
         }
         //console.log("Entity", entity.name, "is valid at", pos)

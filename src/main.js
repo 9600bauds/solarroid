@@ -3,7 +3,6 @@ const PiecePrototype = require('./classes/PiecePrototype');
 const PlacedPiece = require('./classes/PlacedPiece');
 const Grid = require('./classes/Grid');
 const Branch = require('./classes/Branch');
-const { isValidSpaceEntity } = require('./util');
 
 Blueprint.setEntityData({
   "se_space_solar_panel":
@@ -109,7 +108,7 @@ function updateProgress(startingBranch, currentBranch, temperature, iteration) {
   console.log(`Iteration: ${iteration}, Temperature: ${temperature.toFixed(2)}`);
 }
 
-function start(input) {
+function start(blueprintInputText) {
   let allPiecePrototypes = [
     new PiecePrototype(4, 1050, "se_space_solar_panel", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
     new PiecePrototype(3, 100, "solar_panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
@@ -119,8 +118,9 @@ function start(input) {
   //Sort by their score per tile (higher is first)
   allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
 
-  const importedBp = new Blueprint(input);
-  let starterGrid = new Grid(importedBp);
+  const importedBp = new Blueprint(blueprintInputText);
+  const baseTile = document.getElementById('base-tile').value;
+  let starterGrid = new Grid(importedBp, baseTile);
   let startingBranch = new Branch(starterGrid, starterGrid, new Set());
   startingBranch.greedyAutoComplete(allPiecePrototypes)
   startingBranch.updateScore()
@@ -128,9 +128,9 @@ function start(input) {
   simulatedAnnealing(startingBranch, allPiecePrototypes, 100000, 0.9995, 100000)
 }
 
-document.getElementById('search-form').addEventListener('submit', function (event) {
-  event.preventDefault();
-  const input = document.getElementById('search-input').value;
-
-  start(input)
+document.addEventListener('DOMContentLoaded', function () {
+  document.getElementById('blueprint-input').addEventListener('input', function (event) {
+    start(event.target.value);
+  });
 });
+
