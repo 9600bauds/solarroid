@@ -16,7 +16,7 @@ console.assert(!testSquare.isSuppliedBy(testSubStation))
 testSubStation = new PlacedPiece(8, 10, new PiecePrototype(2, 10, "substation", "", "", 18, 18))
 console.assert(testSquare.isSuppliedBy(testSubStation))
 
-async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate, maxIterations) {
+async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate) {
   let currentBranch = startingBranch;
   currentBranch.greedyAutoComplete(allPiecePrototypes)
   let currentScore = currentBranch.score;
@@ -25,7 +25,7 @@ async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTem
   let startTime = Date.now();
   let lastUpdateTime = startTime;
 
-  while (temperature > 1 && iteration < maxIterations) {
+  while (temperature > 1) {
     let newBranch = currentBranch.clone();
     newBranch.makeSmallChange(allPiecePrototypes);
     newBranch.updateScore()
@@ -89,8 +89,7 @@ function start(blueprintInputText) {
 
   let initialTemperature = document.getElementById('initialTemperature').value;
   let coolingRate = document.getElementById('coolingRate').value;
-  let maxIterations = document.getElementById('maxIterations').value;
-  simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate, maxIterations)
+  simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate)
 }
 
 document.addEventListener('DOMContentLoaded', function () {
