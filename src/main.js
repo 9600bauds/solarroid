@@ -80,7 +80,7 @@ function start(blueprintInputText) {
   //Sort by their score per tile (higher is first)
   allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
 
-  const importedBp = new Blueprint(blueprintInputText);
+  const importedBp = new Blueprint(blueprintInputText, { checkWithEntityData: false });
   const baseTile = document.getElementById('base-tile').value;
   let starterGrid = new Grid(importedBp, baseTile);
   let startingBranch = new Branch(starterGrid, starterGrid, new Set());

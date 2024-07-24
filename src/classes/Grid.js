@@ -15,11 +15,13 @@ class Grid {
       let maxY = Number.MIN_SAFE_INTEGER;
       const patternString = baseTile.replace(/[_-]/g, '[-_]');
       const pattern = new RegExp(`^${patternString}$`);
+      let entitiesFound = 0;
       for (const pos in bp.entityPositionGrid) {
         const entity = bp.entityPositionGrid[pos]
         if (!pattern.test(entity.name)) {
           continue
         }
+        entitiesFound++;
         //console.log("Entity", entity.name, "is valid at", pos)
         const split = pos.split(',')
         const thisX = parseInt(split[0])
@@ -28,6 +30,9 @@ class Grid {
         minY = Math.min(minY, thisY)
         maxX = Math.max(maxX, thisX)
         maxY = Math.max(maxY, thisY)
+      }
+      if (!entitiesFound) {
+        throw new Error("no entities found")
       }
       this.height = Math.abs(maxY - minY) + 1
       this.width = Math.abs(maxX - minX) + 1
