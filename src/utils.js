@@ -17,8 +17,18 @@ function showStopButton() {
   document.getElementById('stop-btn').style.display = 'inline-block';
 }
 
+function setTitle(elemId, value) {
+  document.getElementById(elemId).innerHTML = value;
+}
+
+function setErrorMessage(value) {
+  document.getElementById('errormessage').innerHTML = value;
+}
+
 module.exports = {
   clearCanvas,
   showStartButton,
-  showStopButton
+  showStopButton,
+  setTitle,
+  setErrorMessage
 }

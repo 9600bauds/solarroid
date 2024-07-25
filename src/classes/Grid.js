@@ -32,7 +32,7 @@ class Grid {
         maxY = Math.max(maxY, thisY)
       }
       if (!entitiesFound) {
-        throw new Error("no entities found")
+        throw new Error("blueprint is valid, but has no " + baseTile)
       }
       this.height = Math.abs(maxY - minY) + 1
       this.width = Math.abs(maxX - minX) + 1

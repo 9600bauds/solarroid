@@ -6,7 +6,7 @@ const Grid = require('./classes/Grid');
 const Branch = require('./classes/Branch');
 
 const Blueprint = require('./blueprintData');
-const { clearCanvas, showStartButton, showStopButton } = require('./utils');
+const { clearCanvas, showStartButton, showStopButton, setTitle, setErrorMessage } = require('./utils');
 window.Blueprint = Blueprint; // This makes it accessible globally
 
 let startingBranch;
@@ -83,6 +83,9 @@ function calculateStarterBranch(blueprintInputText) {
   if (!blueprintInputText) {
     blueprintInputText = document.getElementById('blueprint-input').value;
   }
+  if (!blueprintInputText) {
+    return
+  }
 
   //todo populate the piece prototypes procedurally
   allPiecePrototypes = [
@@ -94,19 +97,29 @@ function calculateStarterBranch(blueprintInputText) {
   //Sort by their score per tile (higher is first)
   allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
 
-  const importedBp = new Blueprint(blueprintInputText, { checkWithEntityData: false });
-  const baseTile = document.getElementById('base-tile').value;
-  let starterGrid = new Grid(importedBp, baseTile);
-  startingBranch = new Branch(starterGrid, starterGrid, new Set());
-  startingBranch.greedyAutoComplete(allPiecePrototypes)
-  startingBranch.updateScore()
+  try {
+    const importedBp = new Blueprint(blueprintInputText, { checkWithEntityData: false });
+    const baseTile = document.getElementById('base-tile').value;
+    let starterGrid = new Grid(importedBp, baseTile);
+    startingBranch = new Branch(starterGrid, starterGrid, new Set());
+    startingBranch.greedyAutoComplete(allPiecePrototypes)
+    startingBranch.updateScore()
+  }
+  catch (error) {
+    setErrorMessage("Blueprint " + error)
+    return
+  }
 
+  setTitle('left-title', "Starting branch:")
   startingBranch.display("canvas-left")
   clearCanvas("canvas-right");
-  document.getElementById('left-title').innerHTML = "Starting branch:"
+  setErrorMessage("")
 }
 
 function startTheSearch() {
+  if (!startingBranch) {
+    return setErrorMessage("Please input a blueprint first, or select a preset")
+  }
   isRunning = true;
   showStopButton();
   let initialTemperature = document.getElementById('initialTemperature').value;
@@ -127,9 +140,10 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('blueprint-input').addEventListener('input', function (event) {
     calculateStarterBranch(event.target.value);
   });
+  //Explicitly check upon pageload whether there's stuff saved in the input, because it doesn't trigger the event
   const savedBlueprintValue = document.getElementById('blueprint-input').value;
   if (savedBlueprintValue) {
-    calculateStarterBranch(event.target.value);
+    calculateStarterBranch(savedBlueprintValue);
   }
 
   document.getElementById('preset1').addEventListener('click', function () {

@@ -16,13 +16,13 @@
       <div class="row">
         <div class="col-4">
           <div class="pane" id="pane-left">
-            <div id="left-title"><br></div>
+            <div id="left-title" style="min-height: 1.5em"></div>
             <canvas id="canvas-left" width="500" height="800"></canvas>
           </div>
         </div>
         <div class="col-4">
           <div class="pane" id="pane-middle">
-            <div id="right-title"><br></div>
+            <div id="right-title" style="min-height: 1.5em"></div>
             <canvas id="canvas-right" width="500" height="800"></canvas>
           </div>
         </div>
@@ -40,6 +40,7 @@
                 </div>
               </span>
             </div>
+            <div id="errormessage" class="text-danger" style="min-height: 1.5em"></div>
             <div id="controls">
               <div class="form-group">
                 <label for="initialTemperature">Initial Temperature: <small class="form-text text-muted">(use a smaller value for a bigger blueprint, recommended: 10000 - 1000000)</small>
