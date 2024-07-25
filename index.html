@@ -14,18 +14,11 @@
   <body>
     <div class="container-fluid">
       <div class="row">
-        <div class="col-4">
-          <div class="pane" id="pane-left">
-            <div id="left-title" style="min-height: 1.5em"></div>
-            <canvas id="canvas-left" width="500" height="800"></canvas>
-            <div id="left-subtitle" style="min-height: 1.5em"></div>
+        <div class="col-8 d-flex flex-column" style="height: 100vh; overflow: hidden;">
+          <div id="branch-container" class="flex-grow-1 d-flex justify-content-center">
+            <canvas id="branch-canvas"></canvas>
           </div>
-        </div>
-        <div class="col-4">
-          <div class="pane" id="pane-middle">
-            <div id="right-title" style="min-height: 1.5em"></div>
-            <canvas id="canvas-right" width="500" height="800"></canvas>
-            <div id="right-subtitle" style="min-height: 1.5em"></div>
+          <div id="branch-subtitle" class="flex-shrink-0 d-flex justify-content-center" style="min-height: 1.5em">
           </div>
         </div>
         <div class="col-4">

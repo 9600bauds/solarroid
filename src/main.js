@@ -22,25 +22,22 @@ testSubStation = new PlacedPiece(8, 10, new PiecePrototype(2, 10, "substation", 
 console.assert(testSquare.isSuppliedBy(testSubStation))
 
 async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate) {
-  let currentBranch = startingBranch.clone();
-  currentBranch.greedyAutoComplete(allPiecePrototypes)
-  let currentScore = currentBranch.score;
+  let bestBranch = startingBranch.clone();
+
   let temperature = initialTemperature;
   let iteration = 0;
   let startTime = Date.now();
   let lastUpdateTime = startTime;
 
   while (temperature > 1 && isRunning) {
-    let newBranch = currentBranch.clone();
-    newBranch.makeSmallChange(allPiecePrototypes);
-    newBranch.updateScore()
-    let newScore = newBranch.score;
+    let currentBranch = bestBranch.clone();
+    currentBranch.makeSmallChange(allPiecePrototypes);
+    currentBranch.updateScore()
 
-    let isNewScoreBetter = newScore > currentScore;
-    let randomChance = Math.random() < Math.exp((newScore - currentScore) / temperature)
+    let isNewScoreBetter = currentBranch.score > bestBranch.score;
+    let randomChance = Math.random() < Math.exp((currentBranch.score - bestBranch.score) / temperature)
     if (isNewScoreBetter || randomChance) {
-      currentBranch = newBranch;
-      currentScore = newScore;
+      bestBranch = currentBranch;
     }
 
     temperature *= coolingRate;
@@ -50,30 +47,28 @@ async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTem
     let currentTime = Date.now();
     if (currentTime - lastUpdateTime >= 100) {
       await new Promise(resolve => setTimeout(resolve, 0));
-      updateProgress(currentBranch, temperature, iteration);
+      updateProgress(currentBranch, bestBranch, temperature, iteration);
       lastUpdateTime = currentTime;
     }
   }
 
   const endTime = Date.now();
   console.log(`Finished annealing in in ${(endTime - startTime) / 1000} seconds:`);
-  console.log(currentBranch.score)
-  console.log(currentBranch.toString());
-  console.log(currentBranch.toBlueprint().encode());
-  console.log("Score:", currentBranch.score, '(', (currentBranch.score - startingBranch.score), ') from starter branch');
-  console.log("Pieces placed:", currentBranch.piecesPlaced.length);
+  console.log(bestBranch.score)
+  console.log(bestBranch.toString());
+  console.log(bestBranch.toBlueprint().encode());
+  console.log("Score:", bestBranch.score, '(', (bestBranch.score - startingBranch.score), ') from starter branch');
+  console.log("Pieces placed:", bestBranch.piecesPlaced.length);
   console.log("Branches Evaluated:", iteration);
 
   stopTheSearch()
-  renderBranch(startingBranch, "canvas-left")
-  renderBranch(currentBranch, "canvas-right")
+  renderBranch(bestBranch)
 
-  return currentBranch;
+  return bestBranch;
 }
 
-function updateProgress(currentBranch, temperature, iteration) {
-  renderBranch(startingBranch, "canvas-left")
-  renderBranch(currentBranch, "canvas-right")
+function updateProgress(currentBranch, bestBranch, temperature, iteration) {
+  renderBranch(bestBranch)
   console.log(`Iteration: ${iteration}, Temperature: ${temperature.toFixed(2)}`);
 }
 

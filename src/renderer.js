@@ -1,5 +1,4 @@
-const clearCanvas = (elemId) => {
-  const canvas = document.getElementById(elemId);
+const clearCanvas = (canvas) => {
   canvas.width = canvas.width //Stackoverflow tells me not to do this and to do the other thing, but this one actually works and the other one doesn't.
   /*const ctx = canvas.getContext('2d');
 
@@ -7,23 +6,26 @@ const clearCanvas = (elemId) => {
   ctx.setTransform(1, 0, 0, 1, 0, 0)*/
 }
 
-const renderBranch = (branch, elemId) => {
+const renderBranch = (branch) => {
   const pixelsPerUnit = 20;
   const borderSize = 2;
 
-  //Clear the canvas
-  clearCanvas(elemId);
-  const canvas = document.getElementById(elemId);
-  const ctx = canvas.getContext('2d');
-
-  // Scale the canvas
+  // Get our dimensions
   let maxX = branch.startingGrid.width;
   let maxY = branch.startingGrid.height;
   const logicalWidth = maxX * pixelsPerUnit;
   const logicalHeight = maxY * pixelsPerUnit;
-  const scaleX = canvas.width / logicalWidth;
-  const scaleY = canvas.height / logicalHeight;
-  const scale = Math.min(scaleX, scaleY);
+
+  //Create the canvas
+  const container = document.getElementById('branch-container');
+  const canvas = document.getElementById('branch-canvas');
+  clearCanvas(canvas);
+  const ctx = canvas.getContext('2d');
+
+  //Scale ourselves
+  canvas.height = container.clientHeight;
+  const scale = canvas.height / logicalHeight;
+  canvas.width = logicalWidth * scale;
   ctx.scale(scale, scale);
 
   //Actually draw the thing
