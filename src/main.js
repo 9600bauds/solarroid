@@ -22,7 +22,7 @@ testSubStation = new PlacedPiece(8, 10, new PiecePrototype(2, 10, "substation", 
 console.assert(testSquare.isSuppliedBy(testSubStation))
 
 async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate) {
-  let currentBranch = startingBranch;
+  let currentBranch = startingBranch.clone();
   currentBranch.greedyAutoComplete(allPiecePrototypes)
   let currentScore = currentBranch.score;
   let temperature = initialTemperature;
@@ -32,7 +32,6 @@ async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTem
 
   while (temperature > 1 && isRunning) {
     let newBranch = currentBranch.clone();
-    newBranch.updateScore()
     newBranch.makeSmallChange(allPiecePrototypes);
     newBranch.updateScore()
     let newScore = newBranch.score;

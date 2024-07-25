@@ -183,7 +183,9 @@ class Branch {
   }
 
   clone() {
-    return new Branch(this.grid, this.startingGrid, this.piecesPlaced);
+    let clone = new Branch(this.grid, this.startingGrid, this.piecesPlaced);
+    clone.score = this.score;
+    return clone;
   }
 }
 
