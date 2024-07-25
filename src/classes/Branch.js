@@ -1,3 +1,4 @@
+const { clearCanvas } = require('../utils');
 const Grid = require('./Grid');
 const PlacedPiece = require('./PlacedPiece');
 
@@ -84,12 +85,9 @@ class Branch {
     const pixelsPerUnit = 20;
     const borderSize = 2;
 
+    clearCanvas(elemId);
     const canvas = document.getElementById(elemId);
     const ctx = canvas.getContext('2d');
-
-    //Clear the canvas
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.setTransform(1, 0, 0, 1, 0, 0)
 
     // Scale the canvas
     let maxX = this.startingGrid.width;
