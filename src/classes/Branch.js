@@ -81,59 +81,6 @@ class Branch {
     return out;
   }
 
-  display(elemId) {
-    const pixelsPerUnit = 20;
-    const borderSize = 2;
-
-    clearCanvas(elemId);
-    const canvas = document.getElementById(elemId);
-    const ctx = canvas.getContext('2d');
-
-    // Scale the canvas
-    let maxX = this.startingGrid.width;
-    let maxY = this.startingGrid.height;
-    const logicalWidth = maxX * pixelsPerUnit;
-    const logicalHeight = maxY * pixelsPerUnit;
-    const scaleX = canvas.width / logicalWidth;
-    const scaleY = canvas.height / logicalHeight;
-    const scale = Math.min(scaleX, scaleY);
-    ctx.scale(scale, scale);
-
-    // Draw the 2D grid
-    /*ctx.lineWidth = 1 / scale; // Grid line width
-    ctx.strokeStyle = 'black'; // Grid line color
-
-    for (let i = 0; i < this.startingGrid.width; i++) {
-      for (let j = 0; j < this.startingGrid.height; j++) {
-        const x = i * pixelsPerUnit;
-        const y = j * pixelsPerUnit;
-
-        if (this.startingGrid.isSpaceOpen(i, j)) {
-          ctx.strokeRect(x, y, pixelsPerUnit, pixelsPerUnit); // Draw the grid cell
-        }
-      }
-    }*/
-
-    //Actually draw the thing
-    const piecesArray = Array.from(this.piecesPlaced);
-    const powerPoleSet = new Set(piecesArray.filter(piece => piece.prototype.isPowerPole()));
-    this.piecesPlaced.forEach(piece => {
-      const size = piece.prototype.size * pixelsPerUnit;
-      const x = piece.x * pixelsPerUnit;
-      const y = piece.y * pixelsPerUnit;
-
-      let isSupplied = this.isPieceSupplied(piece, powerPoleSet);
-
-      ctx.fillStyle = isSupplied ? piece.prototype.fillColor : "rgba(0, 0, 0, 0.5)";
-      ctx.clearRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
-      ctx.fillRect(x + borderSize, y + borderSize, size - borderSize * 2, size - borderSize * 2);
-
-      ctx.strokeStyle = piece.prototype.borderColor;
-      ctx.lineWidth = 2; // Border width
-      ctx.strokeRect(x + borderSize / 2, y + borderSize / 2, size - borderSize, size - borderSize);
-    });
-  }
-
   toBlueprint() {
     let newBp = new Blueprint();
     for (const piecePlaced of this.piecesPlaced) {

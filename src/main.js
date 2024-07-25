@@ -6,7 +6,9 @@ const Grid = require('./classes/Grid');
 const Branch = require('./classes/Branch');
 
 const Blueprint = require('./blueprintData');
-const { clearCanvas, showStartButton, showStopButton, setTitle, setErrorMessage } = require('./utils');
+const { showStartButton, showStopButton, setTitle, setErrorMessage } = require('./utils');
+const { clearCanvas, renderBranch } = require('./renderer');
+
 window.Blueprint = Blueprint; // This makes it accessible globally
 
 let startingBranch;
@@ -67,15 +69,15 @@ async function simulatedAnnealing(initialTemperature, coolingRate) {
   console.log("Branches Evaluated:", iteration);
 
   stopTheSearch()
-  startingBranch.display("canvas-left")
-  currentBranch.display("canvas-right")
+  renderBranch(startingBranch, "canvas-left")
+  renderBranch(currentBranch, "canvas-right")
 
   return currentBranch;
 }
 
 function updateProgress(currentBranch, temperature, iteration) {
-  startingBranch.display("canvas-left")
-  currentBranch.display("canvas-right")
+  renderBranch(startingBranch, "canvas-left")
+  renderBranch(currentBranch, "canvas-right")
   console.log(`Iteration: ${iteration}, Temperature: ${temperature.toFixed(2)}`);
 }
 
@@ -111,7 +113,7 @@ function calculateStarterBranch(blueprintInputText) {
   }
 
   setTitle('left-title', "Starting branch:")
-  startingBranch.display("canvas-left")
+  renderBranch(startingBranch, "canvas-left")
   clearCanvas("canvas-right");
   setErrorMessage("")
 }
