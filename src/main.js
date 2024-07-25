@@ -106,5 +106,8 @@ document.addEventListener('DOMContentLoaded', function () {
   document.getElementById('preset3').addEventListener('click', function () {
     selectPreset(2);
   });
+  document.getElementById('preset4').addEventListener('click', function () {
+    selectPreset(3);
+  });
 });
 
