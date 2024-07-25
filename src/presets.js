@@ -9,14 +9,7 @@ function selectPreset(index) {
   let preset = presets[index];
   document.getElementById('initialTemperature').value = preset.temp;
   document.getElementById('coolingRate').value = preset.coolingRate;
-  let blueprintInput = document.getElementById('blueprint-input');
-  blueprintInput.value = preset.bpString;
-  // Manually trigger the input event
-  let event = new Event('input', {
-    bubbles: true,
-    cancelable: true,
-  });
-  blueprintInput.dispatchEvent(event);
+  document.getElementById('blueprint-input').value = preset.bpString;
 }
 
 module.exports = {

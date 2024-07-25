@@ -11,9 +11,6 @@ const { clearCanvas, renderBranch } = require('./renderer');
 
 window.Blueprint = Blueprint; // This makes it accessible globally
 
-let startingBranch;
-let bestBranch;
-let allPiecePrototypes;
 let isRunning;
 
 // Extremely lazy testing
@@ -24,7 +21,7 @@ console.assert(!testSquare.isSuppliedBy(testSubStation))
 testSubStation = new PlacedPiece(8, 10, new PiecePrototype(2, 10, "substation", "", "", 18, 18))
 console.assert(testSquare.isSuppliedBy(testSubStation))
 
-async function simulatedAnnealing(initialTemperature, coolingRate) {
+async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTemperature, coolingRate) {
   let currentBranch = startingBranch;
   currentBranch.greedyAutoComplete(allPiecePrototypes)
   let currentScore = currentBranch.score;
@@ -81,16 +78,9 @@ function updateProgress(currentBranch, temperature, iteration) {
   console.log(`Iteration: ${iteration}, Temperature: ${temperature.toFixed(2)}`);
 }
 
-function calculateStarterBranch(blueprintInputText) {
-  if (!blueprintInputText) {
-    blueprintInputText = document.getElementById('blueprint-input').value;
-  }
-  if (!blueprintInputText) {
-    return
-  }
-
+function makePiecePrototypes() {
   //todo populate the piece prototypes procedurally
-  allPiecePrototypes = [
+  let allPiecePrototypes = [
     new PiecePrototype(4, 1050, "se_space_solar_panel", 'rgba(255, 99, 71, 0.5)', 'rgba(255, 99, 71, 1)'),
     new PiecePrototype(3, 100, "solar_panel", 'rgba(70, 130, 180, 0.5)', 'rgba(70, 130, 180, 1)'),
     new PiecePrototype(2, 10, "substation", 'rgba(148, 148, 148, 0.5)', 'rgba(148, 148, 148, 1)', 18, 18),
@@ -98,7 +88,10 @@ function calculateStarterBranch(blueprintInputText) {
   ];
   //Sort by their score per tile (higher is first)
   allPiecePrototypes.sort((a, b) => b.scorePerTile - a.scorePerTile);
+  return allPiecePrototypes;
+}
 
+function makeStarterBranch(blueprintInputText, allPiecePrototypes) {
   try {
     const importedBp = new Blueprint(blueprintInputText, { checkWithEntityData: false });
     const baseTile = document.getElementById('base-tile').value;
@@ -112,21 +105,23 @@ function calculateStarterBranch(blueprintInputText) {
     return
   }
 
-  setTitle('left-title', "Starting branch:")
-  renderBranch(startingBranch, "canvas-left")
-  clearCanvas("canvas-right");
-  setErrorMessage("")
+  return startingBranch
 }
 
 function startTheSearch() {
-  if (!startingBranch) {
+  let blueprintInputText = document.getElementById('blueprint-input').value;
+  if (!blueprintInputText) {
     return setErrorMessage("Please input a blueprint first, or select a preset")
   }
+
+  let allPiecePrototypes = makePiecePrototypes();
+  let starterBranch = makeStarterBranch(blueprintInputText, allPiecePrototypes);
+
   isRunning = true;
   showStopButton();
   let initialTemperature = document.getElementById('initialTemperature').value;
   let coolingRate = document.getElementById('coolingRate').value;
-  simulatedAnnealing(initialTemperature, coolingRate)
+  simulatedAnnealing(starterBranch, allPiecePrototypes, initialTemperature, coolingRate)
 }
 
 function stopTheSearch() {
@@ -138,15 +133,6 @@ document.addEventListener('DOMContentLoaded', function () {
   showStartButton();
   document.getElementById('start-btn').addEventListener('click', startTheSearch);
   document.getElementById('stop-btn').addEventListener('click', stopTheSearch);
-
-  document.getElementById('blueprint-input').addEventListener('input', function (event) {
-    calculateStarterBranch(event.target.value);
-  });
-  //Explicitly check upon pageload whether there's stuff saved in the input, because it doesn't trigger the event
-  const savedBlueprintValue = document.getElementById('blueprint-input').value;
-  if (savedBlueprintValue) {
-    calculateStarterBranch(savedBlueprintValue);
-  }
 
   document.getElementById('preset1').addEventListener('click', function () {
     selectPreset(0);
