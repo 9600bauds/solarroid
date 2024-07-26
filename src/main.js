@@ -52,14 +52,14 @@ async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTem
     }
   }
 
-  const endTime = Date.now();
+  /*const endTime = Date.now();
   console.log(`Finished annealing in in ${(endTime - startTime) / 1000} seconds:`);
   console.log(bestBranch.score)
   console.log(bestBranch.toString());
   console.log(bestBranch.toBlueprint().encode());
   console.log("Score:", bestBranch.score, '(', (bestBranch.score - startingBranch.score), ') from starter branch');
   console.log("Pieces placed:", bestBranch.piecesPlaced.length);
-  console.log("Branches Evaluated:", iteration);
+  console.log("Branches Evaluated:", iteration);*/
 
   stopTheSearch()
   updateProgress(bestBranch, temperature, iteration); //One last time

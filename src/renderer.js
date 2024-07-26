@@ -10,23 +10,29 @@ const renderBranch = (branch) => {
   const pixelsPerUnit = 20;
   const borderSize = 2;
 
-  // Get our dimensions
-  let maxX = branch.startingGrid.width;
-  let maxY = branch.startingGrid.height;
-  const logicalWidth = maxX * pixelsPerUnit;
-  const logicalHeight = maxY * pixelsPerUnit;
-
   //Create the canvas
   const container = document.getElementById('branch-container');
   const canvas = document.getElementById('branch-canvas');
   clearCanvas(canvas);
   const ctx = canvas.getContext('2d');
 
-  //Scale ourselves
-  canvas.height = container.clientHeight;
-  const scale = canvas.height / logicalHeight;
+  // Get our dimensions
+  const maxX = branch.startingGrid.width;
+  const maxY = branch.startingGrid.height;
+  const logicalWidth = maxX * pixelsPerUnit;
+  const logicalHeight = maxY * pixelsPerUnit;
+
+
+  // Scale ourselves
+  const scaleX = container.clientWidth / logicalWidth;
+  const scaleY = container.clientHeight / logicalHeight;
+  const scale = Math.min(scaleX, scaleY);
+
   canvas.width = logicalWidth * scale;
+  canvas.height = logicalHeight * scale;
+
   ctx.scale(scale, scale);
+  //console.log("scaleX:", scaleX, "scaleY:", scaleY, "logicalWidth:", logicalWidth, "logicalHeight", logicalHeight, "container.clientWidth", container.clientWidth, "container.clientHeight", container.clientHeight)
 
   //Actually draw the thing
   const piecesArray = Array.from(branch.piecesPlaced);

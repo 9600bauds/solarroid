@@ -15,8 +15,8 @@
     <div class="container-fluid">
       <div class="row">
         <div class="col-8 d-flex flex-column" style="height: 100vh; overflow: hidden;">
-          <div id="branch-container" class="flex-grow-1 d-flex justify-content-center">
-            <canvas id="branch-canvas"></canvas>
+          <div id="branch-container" class="flex-grow-1 position-relative">
+            <canvas id="branch-canvas" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);"></canvas>
           </div>
           <div id="branch-subtitle" class="flex-shrink-0 d-flex justify-content-center" style="min-height: 3em">
             <div id="subtitles" class="d-none justify-content-between align-items-center" style="font-family: monospace; font-size: 0.9em; width: 50%;">
