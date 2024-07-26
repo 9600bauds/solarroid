@@ -6,8 +6,8 @@ const Grid = require('./classes/Grid');
 const Branch = require('./classes/Branch');
 
 const Blueprint = require('./blueprintData');
-const { showStartButton, showStopButton, setTitle, setErrorMessage } = require('./utils');
-const { clearCanvas, renderBranch } = require('./renderer');
+const { showStartButton, showStopButton, setSubtitle, setErrorMessage } = require('./utils');
+const { renderBranch } = require('./renderer');
 
 window.Blueprint = Blueprint; // This makes it accessible globally
 
@@ -47,7 +47,7 @@ async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTem
     let currentTime = Date.now();
     if (currentTime - lastUpdateTime >= 100) {
       await new Promise(resolve => setTimeout(resolve, 0));
-      updateProgress(currentBranch, bestBranch, temperature, iteration);
+      updateProgress(bestBranch, temperature, iteration);
       lastUpdateTime = currentTime;
     }
   }
@@ -62,15 +62,16 @@ async function simulatedAnnealing(startingBranch, allPiecePrototypes, initialTem
   console.log("Branches Evaluated:", iteration);
 
   stopTheSearch()
-  renderBranch(bestBranch)
+  updateProgress(bestBranch, temperature, iteration); //One last time
 
   return bestBranch;
 }
 
-function updateProgress(currentBranch, bestBranch, temperature, iteration) {
-  renderBranch(bestBranch)
-  console.log(`Iteration: ${iteration}, Temperature: ${temperature.toFixed(2)}`);
+function updateProgress(bestBranch, temperature, iteration) {
+  renderBranch(bestBranch);
+  setSubtitle(iteration, temperature.toFixed(2), bestBranch.score, bestBranch.toBlueprint().encode());
 }
+
 
 function makePiecePrototypes() {
   //todo populate the piece prototypes procedurally
@@ -110,6 +111,9 @@ function startTheSearch() {
 
   let allPiecePrototypes = makePiecePrototypes();
   let starterBranch = makeStarterBranch(blueprintInputText, allPiecePrototypes);
+  if (!starterBranch) {
+    return
+  }
 
   isRunning = true;
   showStopButton();

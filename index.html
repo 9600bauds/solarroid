@@ -18,7 +18,28 @@
           <div id="branch-container" class="flex-grow-1 d-flex justify-content-center">
             <canvas id="branch-canvas"></canvas>
           </div>
-          <div id="branch-subtitle" class="flex-shrink-0 d-flex justify-content-center" style="min-height: 1.5em">
+          <div id="branch-subtitle" class="flex-shrink-0 d-flex justify-content-center" style="min-height: 3em">
+            <div id="subtitles" class="d-none justify-content-between align-items-center" style="font-family: monospace; font-size: 0.9em; width: 50%;">
+              <span class="text-center" style="min-width: 100px;">
+                <strong>Iteration</strong><br>
+                <span id="stat-iteration" style="white-space: pre;"></span>
+              </span>
+              <span class="text-center" style="min-width: 100px;">
+                <strong>Temperature</strong><br>
+                <span id="stat-temperature" style="white-space: pre;"></span>
+              </span>
+              <span class="text-center" style="min-width: 100px;">
+                <strong>Score</strong><br>
+                <span id="stat-score" style="white-space: pre;"></span>
+              </span>
+              <button
+                id="copyButton"
+                class="btn btn-sm btn-secondary"
+                style="width: 100px; font-size: 0.9em; padding: 2px 8px; height: 40px;"
+                >
+                  Copy Blueprint
+              </button>
+            </div>
           </div>
         </div>
         <div class="col-4">
@@ -48,11 +69,11 @@
                 <input type="number" class="form-control" id="coolingRate" min="0.9" max="0.999995" step="0.00001" value="0.9995">
               </div>
             </div>
+            <div id="prototype-controls"> prototype controls go here eventually </div>
             <div id="start-stop-btns">
               <button id="start-btn" class="btn btn-success">Start</button>
               <button id="stop-btn" class="btn btn-danger" style="display: none;">Stop</button>
             </div>
-            <div id="stats"> stats go here eventually </div>
           </div>
         </div>
       </div>
