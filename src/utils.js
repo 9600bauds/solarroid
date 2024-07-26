@@ -9,9 +9,11 @@ function showStopButton() {
 }
 
 function setSubtitle(iteration, temperature, score, bpString) {
+  //Unhide the subtitles by replacing d-none with d-flex
   const subtitleElement = document.getElementById('subtitles');
   subtitleElement.classList.remove('d-none');
   subtitleElement.classList.add('d-flex');
+
   document.getElementById('stat-iteration').innerHTML = iteration;
   document.getElementById('stat-temperature').innerHTML = temperature;
   document.getElementById('stat-score').innerHTML = score;
